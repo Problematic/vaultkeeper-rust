@@ -20,8 +20,8 @@ impl<'a> System<'a> for VisibilitySystem {
     for (entity, _, _) in (&entities, &perceptions, !&viewsheds).join() {
       self.missing_viewsheds.push(entity);
     }
-    for entity in &self.missing_viewsheds {
-      viewsheds.insert(*entity, Viewshed::default()).unwrap();
+    for entity in self.missing_viewsheds.drain(..) {
+      viewsheds.insert(entity, Viewshed::default()).unwrap();
     }
 
     for (entity, position, perception, viewshed) in

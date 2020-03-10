@@ -56,7 +56,7 @@ fn main() {
   state
     .world
     .create_entity()
-    .with(Name::from("Watercooler"))
+    .with(Name::new("Watercooler"))
     .with(Position::new(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
     .with(Renderable {
       glyph: to_cp437('#'),
@@ -73,7 +73,7 @@ fn main() {
   state
     .world
     .create_entity()
-    .with(Name::from("Cake"))
+    .with(Name::new("Cake"))
     .with(Position::new(70, 45))
     .with(Renderable {
       glyph: to_cp437('O'),
@@ -94,7 +94,8 @@ fn main() {
     state
       .world
       .create_entity()
-      .with(Name(format!("Vaultizen #{:0>3}", idx + 1)))
+      .with(Name::new(format!("Vaultizen #{:0>3}", idx + 1)))
+      .with(Character)
       .with(*pos)
       .with(Renderable {
         glyph: to_cp437('☺'),

@@ -1,25 +1,24 @@
 use crate::components::ai::{
-  AIAction, AIContext, AIInterest, AgentInfo, AvailableActions, CurrentAction, Need, Needs,
-  PointOfInterest,
+  AIAction, AICharacterData, AIContext, AIInterest, AvailableActions, CurrentAction, Need, Needs,
+  PointOfInterest, WithDistance,
 };
-use crate::components::{Perception, Position};
+use crate::components::{Character, Name, Perception, Position};
 use crate::utils;
-use ordered_float::NotNan;
 use specs::prelude::*;
 
 #[derive(Default)]
-pub struct ActionSelectionSystem {
-  pending: Vec<(Entity, AIAction)>,
-}
+pub struct ActionSelectionSystem {}
 
-type SystemData<'a> = (
-  Entities<'a>,
-  ReadStorage<'a, Position>,
-  ReadStorage<'a, Perception>,
-  ReadStorage<'a, Needs>,
-  ReadStorage<'a, AvailableActions>,
-  ReadStorage<'a, PointOfInterest>,
-  WriteStorage<'a, CurrentAction>,
+type SystemData<'s> = (
+  Entities<'s>,
+  ReadStorage<'s, Position>,
+  ReadStorage<'s, Perception>,
+  ReadStorage<'s, Name>,
+  ReadStorage<'s, AvailableActions>,
+  ReadStorage<'s, PointOfInterest>,
+  ReadStorage<'s, CurrentAction>,
+  ReadStorage<'s, Character>,
+  Read<'s, LazyUpdate>,
 );
 
 impl<'a> System<'a> for ActionSelectionSystem {
@@ -28,61 +27,71 @@ impl<'a> System<'a> for ActionSelectionSystem {
   #[allow(clippy::cast_precision_loss)]
   fn run(
     &mut self,
-    (entities, positions, perceptions, needs, available_actions, pois, mut current_actions): Self::SystemData,
+    (
+      entities,
+      positions,
+      perceptions,
+      names,
+      available_actions,
+      pois,
+      current_actions,
+      characters,
+      lazy,
+    ): Self::SystemData,
   ) {
-    self.pending.clear();
-
-    for (entity, position, perception, needs, actions, _) in (
+    for (entity, name, position, perception, character, actions, _) in (
       &entities,
+      &names,
       &positions,
       &perceptions,
-      &needs,
+      &characters,
       &available_actions,
       !&current_actions,
     )
       .join()
     {
       let context = AIContext {
-        agent: AgentInfo {
+        agent: AICharacterData {
+          entity,
+          name,
           position,
-          needs,
-          perception,
         },
-        distance_to: &|pos| utils::geom::chebyshev_dist(*position, pos),
-        distance_to_interest: &|interest| match interest {
-          AIInterest::Entity(e) => {
-            if let Some(pos) = positions.get(e) {
-              Some(utils::geom::chebyshev_dist(*position, *pos) as f32)
+        characters: (&entities, &names, &positions, &characters)
+          .join()
+          .filter_map(|(e, name, pos, _)| {
+            let dist = utils::geom::chebyshev_dist(*position, *pos);
+
+            if dist <= perception.range && e != entity {
+              Some(WithDistance(
+                AICharacterData {
+                  entity: e,
+                  name,
+                  position: pos,
+                },
+                dist,
+              ))
             } else {
               None
             }
-          }
-          AIInterest::POI(need) => (&positions, &pois)
-            .join()
-            .map(|(pos, poi)| {
-              let dist = utils::geom::chebyshev_dist(*position, *pos) as f32;
-
-              if poi.need != need || (dist > perception.range as f32 && !poi.is_global) {
-                NotNan::from(0.0)
-              } else {
-                NotNan::from(dist / perception.range as f32)
-              }
-            })
-            .min()
-            .map(|v| v.into()),
-          AIInterest::Position(pos) => Some(utils::geom::chebyshev_dist(*position, pos) as f32),
-        },
+          })
+          .collect(),
+        points_of_interest: (&pois, &positions)
+          .join()
+          .filter_map(|(poi, pos)| {
+            let dist = utils::geom::chebyshev_dist(*position, *pos);
+            if poi.is_global || dist <= perception.range {
+              Some(WithDistance(poi, dist))
+            } else {
+              None
+            }
+          })
+          .collect(),
       };
+
       if let Some((action, score)) = actions.evaluate(&context) {
         log::debug!("Selected action {:?} (score: {})", action, score);
-        self.pending.push((entity, action));
+        lazy.insert(entity, CurrentAction(action));
       }
-    }
-
-    for (entity, action) in &self.pending {
-      current_actions
-        .insert(*entity, CurrentAction(*action))
-        .unwrap();
     }
   }
 }

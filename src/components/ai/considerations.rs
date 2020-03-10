@@ -12,8 +12,10 @@ pub struct NeedConsideration {
 
 impl AIConsideration for NeedConsideration {
   fn score(&self, context: &AIContext) -> f32 {
-    ResponseCurve::InverseLinear
-      .evaluate(*context.agent.needs.0.get(&self.need).unwrap_or(&0.0) / 100.0)
+    // ResponseCurve::InverseLinear
+    //   .evaluate(*context.agent.needs.0.get(&self.need).unwrap_or(&0.0) / 100.0)
+
+    0.0
   }
 }
 
@@ -36,10 +38,12 @@ pub struct DistanceToInterestConsideration {
 impl AIConsideration for DistanceToInterestConsideration {
   #[allow(clippy::cast_precision_loss)]
   fn score(&self, context: &AIContext) -> f32 {
-    if let Some(dist) = (context.distance_to_interest)(self.interest) {
-      ResponseCurve::CustomLinear(-1.0, 1.0, 1.1, 0.0).evaluate(dist)
-    } else {
-      0.0
-    }
+    // if let Some(dist) = (context.distance_to_interest)(self.interest) {
+    //   ResponseCurve::CustomLinear(-1.0, 1.0, 1.1, 0.0).evaluate(dist)
+    // } else {
+    //   0.0
+    // }
+
+    0.0
   }
 }

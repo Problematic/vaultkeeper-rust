@@ -1,6 +1,6 @@
 use super::considerations::*;
-use super::{Decision, Need, Needs};
-use crate::components::{Perception, Position};
+use super::{Decision, Need, Needs, PointOfInterest};
+use crate::components::{Name, Perception, Position};
 use ordered_float::NotNan;
 use specs::{prelude::*, Component};
 
@@ -17,16 +17,25 @@ pub enum AIAction {
   Interact(Entity),
 }
 
-pub struct AgentInfo<'a> {
+#[derive(Debug)]
+pub struct AICharacterData<'a> {
+  pub entity: Entity,
+  pub name: &'a Name,
   pub position: &'a Position,
-  pub needs: &'a Needs,
-  pub perception: &'a Perception,
 }
 
+use std::fmt;
+
+#[derive(Debug)]
+pub struct WithDistance<T>(pub T, pub i32)
+where
+  T: fmt::Debug;
+
+#[derive(Debug)]
 pub struct AIContext<'a> {
-  pub agent: AgentInfo<'a>,
-  pub distance_to: &'a dyn Fn(Position) -> i32,
-  pub distance_to_interest: &'a dyn Fn(AIInterest) -> Option<f32>,
+  pub agent: AICharacterData<'a>,
+  pub characters: Vec<WithDistance<AICharacterData<'a>>>,
+  pub points_of_interest: Vec<WithDistance<&'a PointOfInterest>>,
 }
 
 #[derive(Component, Debug)]

@@ -1,4 +1,5 @@
 pub mod ai;
+mod character;
 mod name;
 mod navigation;
 mod perception;
@@ -6,6 +7,7 @@ mod position;
 mod renderable;
 mod viewshed;
 
+pub use character::Character;
 pub use name::Name;
 pub use navigation::Navigation;
 pub use perception::Perception;
