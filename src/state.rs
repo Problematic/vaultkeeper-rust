@@ -25,13 +25,15 @@ impl std::ops::Not for RunState {
 pub struct State {
   pub run_state: RunState,
   pub world: World,
+  pub dispatcher: Dispatcher<'static, 'static>,
 }
 
 impl State {
-  pub fn new() -> Self {
+  pub fn new(world: World, dispatcher: Dispatcher<'static, 'static>) -> Self {
     Self {
-      world: World::new(),
       run_state: RunState::Running,
+      world,
+      dispatcher,
     }
   }
 }
@@ -41,8 +43,6 @@ impl GameState for State {
     self.world.insert(DeltaTime(Duration::from_secs_f32(
       ctx.frame_time_ms / 1000.0,
     )));
-
-    ctx.cls();
 
     if let Some(key) = ctx.key {
       match key {
@@ -54,14 +54,17 @@ impl GameState for State {
       }
     }
 
+    self.dispatcher.dispatch(&self.world);
+    self.world.maintain();
+
     self.world.exec(
       |(positions, renderables): (ReadStorage<Position>, ReadStorage<Renderable>)| {
+        ctx.cls();
+
         for (pos, render) in (&positions, &renderables).join() {
           ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
         }
       },
     );
-
-    self.world.maintain();
   }
 }
