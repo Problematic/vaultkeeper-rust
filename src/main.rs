@@ -50,6 +50,7 @@ fn main() {
 
   world.register::<Renderable>();
   world.register::<Name>();
+  world.register::<Character>();
 
   let mut state = State::new(world, dispatcher);
 
@@ -109,6 +110,7 @@ fn main() {
       ]))
       .with(Navigation::default())
       .with(AvailableActions::default())
+      .with(Blackboard::default())
       .build();
   }
 

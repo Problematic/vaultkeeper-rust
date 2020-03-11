@@ -10,14 +10,20 @@ pub struct Decision {
 
 impl Decision {
   #[allow(clippy::cast_precision_loss)]
-  pub fn score(&self, context: &AIContext) -> f32 {
+  pub fn score(&self, context: &mut AIContext) -> f32 {
     if self.considerations.is_empty() {
       return 0.0;
     }
 
     let mut result = self.weight;
     for consideration in &self.considerations {
+      if result <= 0.0 {
+        break;
+      }
+
       let score = consideration.score(context);
+
+      log::debug!("\u{2502}    {:?} => {}", consideration, score);
 
       result *= score;
     }
@@ -26,13 +32,5 @@ impl Decision {
     let make_up_value = (1.0 - result) * mod_factor;
 
     result + (make_up_value * result)
-  }
-}
-
-impl std::ops::Deref for Decision {
-  type Target = AIAction;
-
-  fn deref(&self) -> &Self::Target {
-    &self.action
   }
 }
