@@ -22,20 +22,14 @@ pub struct AICharacterData<'a> {
   pub entity: Entity,
   pub name: &'a Name,
   pub position: &'a Position,
+  pub perception: &'a Perception,
 }
 
-use std::fmt;
-
-#[derive(Debug)]
-pub struct WithDistance<T>(pub T, pub i32)
-where
-  T: fmt::Debug;
-
-#[derive(Debug)]
 pub struct AIContext<'a> {
   pub agent: AICharacterData<'a>,
-  pub characters: Vec<WithDistance<AICharacterData<'a>>>,
-  pub points_of_interest: Vec<WithDistance<&'a PointOfInterest>>,
+  pub entities: &'a Entities<'a>,
+  pub positions: &'a ReadStorage<'a, Position>,
+  pub points_of_interest: &'a ReadStorage<'a, PointOfInterest>,
 }
 
 #[derive(Component, Debug)]
@@ -57,9 +51,7 @@ impl Default for AvailableActions {
           action: AIAction::Goto(AIInterest::POI(Need::Social)),
           considerations: vec![
             Box::new(NeedConsideration { need: Need::Social }),
-            Box::new(DistanceToInterestConsideration {
-              interest: AIInterest::POI(Need::Social),
-            }),
+            Box::new(DistanceToInterestConsideration { need: Need::Social }),
           ],
         },
         Decision {
@@ -68,9 +60,7 @@ impl Default for AvailableActions {
           action: AIAction::Goto(AIInterest::POI(Need::Hunger)),
           considerations: vec![
             Box::new(NeedConsideration { need: Need::Hunger }),
-            Box::new(DistanceToInterestConsideration {
-              interest: AIInterest::POI(Need::Hunger),
-            }),
+            Box::new(DistanceToInterestConsideration { need: Need::Hunger }),
           ],
         },
       ],

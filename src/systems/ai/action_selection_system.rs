@@ -1,8 +1,8 @@
 use crate::components::ai::{
   AIAction, AICharacterData, AIContext, AIInterest, AvailableActions, CurrentAction, Need, Needs,
-  PointOfInterest, WithDistance,
+  PointOfInterest,
 };
-use crate::components::{Character, Name, Perception, Position};
+use crate::components::{Name, Perception, Position};
 use crate::utils;
 use specs::prelude::*;
 
@@ -17,7 +17,6 @@ type SystemData<'s> = (
   ReadStorage<'s, AvailableActions>,
   ReadStorage<'s, PointOfInterest>,
   ReadStorage<'s, CurrentAction>,
-  ReadStorage<'s, Character>,
   Read<'s, LazyUpdate>,
 );
 
@@ -33,18 +32,16 @@ impl<'a> System<'a> for ActionSelectionSystem {
       perceptions,
       names,
       available_actions,
-      pois,
+      points_of_interest,
       current_actions,
-      characters,
       lazy,
     ): Self::SystemData,
   ) {
-    for (entity, name, position, perception, character, actions, _) in (
+    for (entity, name, position, perception, actions, _) in (
       &entities,
       &names,
       &positions,
       &perceptions,
-      &characters,
       &available_actions,
       !&current_actions,
     )
@@ -55,37 +52,11 @@ impl<'a> System<'a> for ActionSelectionSystem {
           entity,
           name,
           position,
+          perception,
         },
-        characters: (&entities, &names, &positions, &characters)
-          .join()
-          .filter_map(|(e, name, pos, _)| {
-            let dist = utils::geom::chebyshev_dist(*position, *pos);
-
-            if dist <= perception.range && e != entity {
-              Some(WithDistance(
-                AICharacterData {
-                  entity: e,
-                  name,
-                  position: pos,
-                },
-                dist,
-              ))
-            } else {
-              None
-            }
-          })
-          .collect(),
-        points_of_interest: (&pois, &positions)
-          .join()
-          .filter_map(|(poi, pos)| {
-            let dist = utils::geom::chebyshev_dist(*position, *pos);
-            if poi.is_global || dist <= perception.range {
-              Some(WithDistance(poi, dist))
-            } else {
-              None
-            }
-          })
-          .collect(),
+        entities: &entities,
+        positions: &positions,
+        points_of_interest: &points_of_interest,
       };
 
       if let Some((action, score)) = actions.evaluate(&context) {
