@@ -3,6 +3,7 @@ use super::{AIContext, Decision, Need};
 use crate::components::{Position, RadialZone};
 use ordered_float::NotNan;
 use specs::{prelude::*, Component};
+use std::time::Duration;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
@@ -97,6 +98,10 @@ impl Default for AvailableActions {
           weight: 1.0,
           action: AIAction::Goto(AIInterest::BlackboardTarget),
           considerations: vec![
+            Box::new(CooldownConsideration::new(
+              "goto-social-poi",
+              Duration::from_secs(1),
+            )),
             Box::new(NearestPOIPicker { need: Need::Social }),
             Box::new(NeedConsideration { need: Need::Social }),
             Box::new(NearTargetConsideration { max_distance: 10.0 }),
@@ -107,6 +112,10 @@ impl Default for AvailableActions {
           weight: 1.0,
           action: AIAction::Goto(AIInterest::BlackboardTarget),
           considerations: vec![
+            Box::new(CooldownConsideration::new(
+              "goto-food-poi",
+              Duration::from_secs(1),
+            )),
             Box::new(NearestPOIPicker { need: Need::Hunger }),
             Box::new(NeedConsideration { need: Need::Hunger }),
             Box::new(NearTargetConsideration { max_distance: 10.0 }),
@@ -138,6 +147,7 @@ impl AvailableActions {
 
         (d.action, d.name.clone(), score)
       })
+      .filter(|r| r.2 > 0.0)
       .max_by_key(|r| NotNan::from(r.2))
   }
 }

@@ -2,6 +2,7 @@ use super::{Blackboard, Needs, PointOfInterest};
 use crate::components::{Name, Navigation, Perception, Position};
 use crate::utils;
 use specs::prelude::*;
+use std::time::Duration;
 
 #[derive(Debug)]
 pub struct AICharacterData<'a> {
@@ -14,6 +15,7 @@ pub struct AICharacterData<'a> {
 
 #[allow(clippy::module_name_repetitions)]
 pub struct AIContext<'a> {
+  pub dt: Duration,
   pub agent: AICharacterData<'a>,
   pub entities: &'a Entities<'a>,
   pub positions: &'a ReadStorage<'a, Position>,

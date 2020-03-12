@@ -2,6 +2,8 @@ use crate::components::ai::{
   AICharacterData, AIContext, AvailableActions, Blackboard, CurrentAction, Needs, PointOfInterest,
 };
 use crate::components::{Name, Navigation, Perception, Position};
+use crate::resources::DeltaTime;
+use crate::utils;
 use specs::prelude::*;
 use std::time::Instant;
 
@@ -10,6 +12,7 @@ pub struct ActionSystem {}
 
 type SystemData<'s> = (
   Entities<'s>,
+  ReadExpect<'s, DeltaTime>,
   ReadStorage<'s, Position>,
   ReadStorage<'s, Perception>,
   ReadStorage<'s, Name>,
@@ -30,6 +33,7 @@ impl<'a> System<'a> for ActionSystem {
     &mut self,
     (
       entities,
+      delta_time,
       positions,
       perceptions,
       names,
@@ -65,7 +69,14 @@ impl<'a> System<'a> for ActionSystem {
     )
       .join()
     {
+      for cooldown in blackboard.cooldowns.values_mut() {
+        *cooldown = cooldown
+          .checked_sub(**delta_time)
+          .unwrap_or(utils::ZERO_DURATION);
+      }
+
       let mut context = AIContext {
+        dt: **delta_time,
         agent: AICharacterData {
           entity,
           name,

@@ -1,6 +1,8 @@
 use super::AIContext;
 use crate::components::ai::{Need, ResponseCurve};
+use crate::utils;
 use specs::prelude::*;
+use std::time::Duration;
 
 pub trait AIConsideration: Send + Sync + std::fmt::Debug {
   fn score(&self, _context: &mut AIContext) -> f32;
@@ -94,6 +96,31 @@ impl AIConsideration for NearestPOIPicker {
 
     if let Some((entity, _, _)) = result {
       context.blackboard.target = Some(entity);
+      1.0
+    } else {
+      0.0
+    }
+  }
+}
+
+#[derive(Debug)]
+pub struct CooldownConsideration {
+  key: &'static str,
+  duration: Duration,
+}
+
+impl CooldownConsideration {
+  pub fn new(key: &'static str, duration: Duration) -> Self {
+    Self { key, duration }
+  }
+}
+
+impl AIConsideration for CooldownConsideration {
+  fn score(&self, context: &mut AIContext) -> f32 {
+    let remaining = context.blackboard.cooldowns.entry(self.key).or_default();
+
+    if *remaining == utils::ZERO_DURATION {
+      context.blackboard.cooldowns.insert(self.key, self.duration);
       1.0
     } else {
       0.0
