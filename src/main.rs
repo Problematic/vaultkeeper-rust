@@ -25,21 +25,16 @@ fn main() {
   let context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)
     .with_title("Vaultkeeper")
     .with_tile_dimensions(16, 16)
+    .with_fps_cap(5.0) // TODO: limit agent tick rate without FPS cap
     .build();
 
   let db = DispatcherBuilder::new()
     .with(VisibilitySystem::default(), "visibility", &[])
     .with(NeedDecaySystem::default(), "need_decay", &[])
-    .with(
-      ActionSelectionSystem::default(),
-      "action_selection",
-      &["need_decay"],
-    )
-    .with(
-      PathfinderSystem::default(),
-      "pathfinder",
-      &["action_selection"],
-    )
+    .with(PathfinderSystem::default(), "pathfinder", &[])
+    .with(MovementSystem::default(), "movement", &["pathfinder"])
+    .with_barrier()
+    .with(ActionSystem::default(), "action", &[])
     .with_barrier();
 
   db.print_par_seq();

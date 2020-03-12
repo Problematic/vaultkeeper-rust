@@ -13,36 +13,41 @@ impl<'a> System<'a> for PathfinderSystem {
 
   fn run(&mut self, (positions, mut navigations): Self::SystemData) {
     for (position, navigation) in (&positions, &mut navigations).join() {
-      if navigation.needs_path() {
-        let Navigation { goal, .. } = navigation;
-
-        let start = Instant::now();
-        let result = astar(
-          position,
-          successors,
-          |p| utils::geom::chebyshev_dist(*position, *p),
-          |p| goal.contains(p),
-        );
-
-        if let Some((path, cost)) = result {
-          log::debug!(
-            "Found path from {:?} to {:?} in {}ms (len={}, cost={})",
+      match navigation {
+        Navigation {
+          goal: Some(goal),
+          path,
+        } if path.is_empty() => {
+          let start = Instant::now();
+          let result = astar(
             position,
-            goal,
-            start.elapsed().as_millis(),
-            path.len(),
-            cost
+            successors,
+            |p| utils::geom::chebyshev_dist(*position, *p),
+            |p| goal.contains(*p),
           );
 
-          navigation.path = path;
-        } else {
-          log::warn!(
-            "Couldn't find path from {:?} to {:?}, clearing goal",
-            position,
-            goal
-          );
-          navigation.goal.clear();
+          if let Some((path, cost)) = result {
+            log::debug!(
+              "Found path from {:?} to {:?} in {}\u{3bc}s (len={}, cost={})",
+              position,
+              goal,
+              start.elapsed().as_micros(),
+              path.len(),
+              cost
+            );
+
+            navigation.path.clear();
+            navigation.path.extend(path);
+          } else {
+            log::warn!(
+              "Couldn't find path from {:?} to {:?}, clearing goal",
+              position,
+              goal
+            );
+            navigation.goal = None;
+          }
         }
+        _ => {}
       }
     }
   }

@@ -1,5 +1,5 @@
-mod action_selection_system;
+mod action_system;
 mod need_decay_system;
 
-pub use action_selection_system::ActionSelectionSystem;
+pub use action_system::ActionSystem;
 pub use need_decay_system::NeedDecaySystem;

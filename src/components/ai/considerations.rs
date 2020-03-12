@@ -96,7 +96,6 @@ impl AIConsideration for NearestPOIPicker {
       context.blackboard.target = Some(entity);
       1.0
     } else {
-      context.blackboard.target = None;
       0.0
     }
   }

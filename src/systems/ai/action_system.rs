@@ -1,12 +1,12 @@
 use crate::components::ai::{
   AICharacterData, AIContext, AvailableActions, Blackboard, CurrentAction, Needs, PointOfInterest,
 };
-use crate::components::{Name, Perception, Position};
+use crate::components::{Name, Navigation, Perception, Position};
 use specs::prelude::*;
 use std::time::Instant;
 
 #[derive(Default)]
-pub struct ActionSelectionSystem {}
+pub struct ActionSystem {}
 
 type SystemData<'s> = (
   Entities<'s>,
@@ -18,10 +18,11 @@ type SystemData<'s> = (
   ReadStorage<'s, PointOfInterest>,
   ReadStorage<'s, CurrentAction>,
   WriteStorage<'s, Blackboard>,
+  WriteStorage<'s, Navigation>,
   Read<'s, LazyUpdate>,
 );
 
-impl<'a> System<'a> for ActionSelectionSystem {
+impl<'a> System<'a> for ActionSystem {
   type SystemData = SystemData<'a>;
 
   #[allow(clippy::cast_precision_loss)]
@@ -37,10 +38,21 @@ impl<'a> System<'a> for ActionSelectionSystem {
       points_of_interest,
       current_actions,
       mut blackboards,
+      mut navigations,
       lazy,
     ): Self::SystemData,
   ) {
-    for (entity, name, position, needs, perception, actions, blackboard, _) in (
+    for (
+      entity,
+      name,
+      position,
+      needs,
+      perception,
+      actions,
+      blackboard,
+      navigation,
+      current_action,
+    ) in (
       &entities,
       &names,
       &positions,
@@ -48,7 +60,8 @@ impl<'a> System<'a> for ActionSelectionSystem {
       &perceptions,
       &available_actions,
       &mut blackboards,
-      !&current_actions,
+      &mut navigations,
+      current_actions.maybe(),
     )
       .join()
     {
@@ -64,21 +77,29 @@ impl<'a> System<'a> for ActionSelectionSystem {
         positions: &positions,
         points_of_interest: &points_of_interest,
         blackboard,
+        navigation,
       };
 
-      let start = Instant::now();
-
-      if let Some((action, decision_name, score)) = actions.evaluate(&mut context) {
-        log::debug!(
-          "{} selected '{}' (score: {}, elapsed: {}\u{3bc}s)",
-          name,
-          decision_name,
-          score,
-          start.elapsed().as_micros()
-        );
-        lazy.insert(entity, CurrentAction(action));
+      if let Some(CurrentAction(action)) = current_action {
+        if action.is_done(&context) {
+          lazy.remove::<CurrentAction>(entity);
+        }
       } else {
-        log::warn!("No viable actions found for {}", name);
+        let start = Instant::now();
+
+        if let Some((action, decision_name, score)) = actions.evaluate(&mut context) {
+          log::debug!(
+            "{} selected '{}' (score: {}, elapsed: {}\u{3bc}s)",
+            name,
+            decision_name,
+            score,
+            start.elapsed().as_micros()
+          );
+          action.select(&mut context);
+          lazy.insert(entity, CurrentAction(action));
+        } else {
+          log::warn!("No viable actions found for {}", name);
+        }
       }
     }
   }

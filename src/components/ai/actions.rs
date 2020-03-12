@@ -1,7 +1,6 @@
 use super::considerations::*;
-use super::{Blackboard, Decision, Need, Needs, PointOfInterest};
-use crate::components::{Name, Perception, Position};
-use crate::utils;
+use super::{AIContext, Decision, Need};
+use crate::components::{Position, RadialZone};
 use ordered_float::NotNan;
 use specs::{prelude::*, Component};
 
@@ -20,31 +19,68 @@ pub enum AIAction {
   Interact(Entity),
 }
 
-#[derive(Debug)]
-pub struct AICharacterData<'a> {
-  pub entity: Entity,
-  pub name: &'a Name,
-  pub position: &'a Position,
-  pub perception: &'a Perception,
-  pub needs: &'a Needs,
-}
+impl AIAction {
+  pub fn select(self, context: &mut AIContext) {
+    use AIAction::*;
 
-pub struct AIContext<'a> {
-  pub agent: AICharacterData<'a>,
-  pub entities: &'a Entities<'a>,
-  pub positions: &'a ReadStorage<'a, Position>,
-  pub points_of_interest: &'a ReadStorage<'a, PointOfInterest>,
-  pub blackboard: &'a mut Blackboard,
-}
+    match self {
+      Goto(interest) => match interest {
+        AIInterest::BlackboardTarget => {
+          if let Some(pos) = context.get_entity_pos(context.blackboard.target) {
+            if let Some(poi) = context
+              .blackboard
+              .target
+              .and_then(|e| context.points_of_interest.get(e))
+            {
+              context.navigation.goal = Some(Box::new(RadialZone(pos, poi.range)));
+            } else {
+              context.navigation.goal = Some(Box::new(pos));
+            }
+          } else {
+            log::warn!(
+              "Couldn't find a position for {}'s target ({:?})",
+              context.agent.name,
+              context.blackboard.target
+            );
+          }
+        }
+        _ => unimplemented!(),
+      },
+      _ => unimplemented!(),
+    }
+  }
 
-impl<'a> AIContext<'a> {
-  pub fn distance_to_pos(&self, position: Position) -> i32 {
-    utils::geom::chebyshev_dist(*self.agent.position, position)
+  pub fn is_done(self, context: &AIContext) -> bool {
+    use AIAction::*;
+
+    match self {
+      Goto(interest) => match interest {
+        AIInterest::BlackboardTarget => {
+          if let Some(pos) = context.get_entity_pos(context.blackboard.target) {
+            context.navigation.at_goal(pos)
+          } else {
+            true
+          }
+        }
+        _ => unimplemented!(),
+      },
+      _ => unimplemented!(),
+    }
   }
 }
 
 #[derive(Component, Debug)]
 pub struct CurrentAction(pub AIAction);
+
+use std::ops;
+
+impl ops::Deref for CurrentAction {
+  type Target = AIAction;
+
+  fn deref(&self) -> &Self::Target {
+    &self.0
+  }
+}
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Component, Debug)]
