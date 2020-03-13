@@ -1,8 +1,8 @@
 use super::{AIAction, AIConsideration, AIContext};
+use std::borrow::Cow;
 
-#[derive(Debug)]
 pub struct Decision {
-  pub name: String,
+  pub name: Cow<'static, str>,
   pub weight: f32,
   pub action: AIAction,
   pub considerations: Vec<Box<dyn AIConsideration>>,
@@ -32,5 +32,12 @@ impl Decision {
     let make_up_value = (1.0 - result) * mod_factor;
 
     result + (make_up_value * result)
+  }
+}
+
+use std::fmt;
+impl fmt::Debug for Decision {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "{}", self.name)
   }
 }

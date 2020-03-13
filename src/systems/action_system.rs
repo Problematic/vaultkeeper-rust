@@ -98,16 +98,16 @@ impl<'a> System<'a> for ActionSystem {
       } else {
         let start = Instant::now();
 
-        if let Some((action, decision_name, score)) = actions.evaluate(&mut context) {
+        if let Some((decision, score)) = actions.evaluate(&mut context) {
           log::debug!(
             "{} selected '{}' (score: {}, elapsed: {}\u{3bc}s)",
             name,
-            decision_name,
+            decision.name,
             score,
             start.elapsed().as_micros()
           );
-          action.select(&mut context);
-          lazy.insert(entity, CurrentAction(action));
+          decision.action.select(&mut context);
+          lazy.insert(entity, CurrentAction(decision.action));
         } else {
           log::warn!("No viable actions found for {}", name);
         }

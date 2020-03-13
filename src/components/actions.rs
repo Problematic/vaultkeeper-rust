@@ -1,7 +1,12 @@
 use super::{considerations::*, AIContext, Decision, Need, Position, RadialZone};
 use ordered_float::NotNan;
 use specs::{prelude::*, Component};
+use std::borrow::Cow;
 use std::time::Duration;
+
+pub trait Action {
+  fn select(&mut self, context: &mut AIContext);
+}
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
@@ -92,7 +97,7 @@ impl Default for AvailableActions {
     Self {
       decisions: vec![
         Decision {
-          name: String::from("Go to social POI"),
+          name: Cow::Borrowed("Go to social POI"),
           weight: 1.0,
           action: AIAction::Goto(AIInterest::BlackboardTarget),
           considerations: vec![
@@ -106,7 +111,7 @@ impl Default for AvailableActions {
           ],
         },
         Decision {
-          name: String::from("Go to food POI"),
+          name: Cow::Borrowed("Go to food POI"),
           weight: 1.0,
           action: AIAction::Goto(AIInterest::BlackboardTarget),
           considerations: vec![
@@ -126,7 +131,7 @@ impl Default for AvailableActions {
 
 impl AvailableActions {
   #[must_use]
-  pub fn evaluate(&self, context: &mut AIContext) -> Option<(AIAction, String, f32)> {
+  pub fn evaluate(&self, context: &mut AIContext) -> Option<(&Decision, f32)> {
     // TODO: return a lightweight handle to a globally-registered decision
     // so we don't have the clone the name and/or the decision itself
     self
@@ -143,9 +148,9 @@ impl AvailableActions {
 
         log::debug!("\u{2514} Score => {}", score);
 
-        (d.action, d.name.clone(), score)
+        (d, score)
       })
-      .filter(|r| r.2 > 0.0)
-      .max_by_key(|r| NotNan::from(r.2))
+      .filter(|r| r.1 > 0.0)
+      .max_by_key(|r| NotNan::from(r.1))
   }
 }
