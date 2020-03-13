@@ -1,4 +1,4 @@
-use crate::components::ai::Need;
+use super::Need;
 use specs::{prelude::*, Component};
 
 #[derive(Component, Debug)]

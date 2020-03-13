@@ -1,7 +1,7 @@
-use crate::components::ai::{
-  AICharacterData, AIContext, AvailableActions, Blackboard, CurrentAction, Needs, PointOfInterest,
+use crate::components::{
+  AICharacterData, AIContext, AvailableActions, Blackboard, CurrentAction, Name, Navigation, Needs,
+  Perception, PointOfInterest, Position,
 };
-use crate::components::{Name, Navigation, Perception, Position};
 use crate::resources::DeltaTime;
 use crate::utils;
 use specs::prelude::*;

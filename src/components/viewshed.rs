@@ -1,4 +1,4 @@
-use crate::components::Position;
+use super::Position;
 use specs::{prelude::*, Component};
 
 #[derive(Component, Debug, Default)]

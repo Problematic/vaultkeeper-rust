@@ -1,5 +1,4 @@
-use super::{Blackboard, Needs, PointOfInterest};
-use crate::components::{Name, Navigation, Perception, Position};
+use super::{Blackboard, Name, Navigation, Needs, Perception, PointOfInterest, Position};
 use crate::utils;
 use specs::prelude::*;
 use std::time::Duration;

@@ -1,4 +1,4 @@
-use crate::components::{Position, Zone};
+use super::{Position, Zone};
 use specs::{prelude::*, Component};
 use std::collections::VecDeque;
 

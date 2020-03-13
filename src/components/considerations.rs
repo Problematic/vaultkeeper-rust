@@ -1,5 +1,4 @@
-use super::AIContext;
-use crate::components::ai::{Need, ResponseCurve};
+use super::{AIContext, Need, ResponseCurve};
 use crate::utils;
 use specs::prelude::*;
 use std::time::Duration;

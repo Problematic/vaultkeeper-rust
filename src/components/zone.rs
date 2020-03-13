@@ -1,6 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 
-use crate::components::Position;
+use super::Position;
 use crate::utils;
 
 pub trait Zone: Send + Sync + std::fmt::Debug {

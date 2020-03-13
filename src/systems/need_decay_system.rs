@@ -1,4 +1,4 @@
-use crate::components::ai::Needs;
+use crate::components::Needs;
 use crate::resources::DeltaTime;
 use specs::prelude::*;
 

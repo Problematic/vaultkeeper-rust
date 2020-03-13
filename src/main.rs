@@ -6,10 +6,8 @@ mod state;
 mod systems;
 mod utils;
 
-use crate::components::ai::*;
 use crate::components::*;
 use crate::state::State;
-use crate::systems::ai::*;
 use crate::systems::*;
 use bracket_lib::prelude::*;
 use rand::Rng;
