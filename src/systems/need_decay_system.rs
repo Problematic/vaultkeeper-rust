@@ -1,5 +1,5 @@
-use crate::components::Needs;
 use crate::resources::DeltaTime;
+use components::Needs;
 use specs::prelude::*;
 
 #[derive(Default)]

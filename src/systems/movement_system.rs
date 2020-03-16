@@ -1,4 +1,4 @@
-use crate::components::{Navigation, Position};
+use components::{Navigation, Position};
 use specs::prelude::*;
 
 #[derive(Default)]

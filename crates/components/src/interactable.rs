@@ -1,4 +1,4 @@
-use crate::components::AIContext;
+use crate::AIContext;
 use serde::{Deserialize, Serialize};
 use specs::{prelude::*, Component};
 use std::ops::{Deref, DerefMut};

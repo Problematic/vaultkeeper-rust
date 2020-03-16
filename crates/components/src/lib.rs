@@ -15,6 +15,7 @@ mod point_of_interest;
 mod position;
 mod renderable;
 mod response_curve;
+pub mod utils;
 mod viewshed;
 mod zone;
 

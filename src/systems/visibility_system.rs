@@ -1,5 +1,4 @@
-use crate::components::{Perception, Position, Viewshed};
-use crate::utils;
+use components::{utils::chebyshev_dist, Perception, Position, Viewshed};
 use specs::prelude::*;
 
 #[derive(Default)]
@@ -34,7 +33,7 @@ impl<'a> System<'a> for VisibilitySystem {
           continue;
         }
 
-        if utils::geom::chebyshev_dist(*position, *pos) <= perception.range {
+        if chebyshev_dist(*position, *pos) <= perception.range {
           viewshed.visible_entities.push(e);
         }
       }

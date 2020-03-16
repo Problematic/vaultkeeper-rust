@@ -1,11 +1,11 @@
-use crate::components::{
+use crate::resources::DeltaTime;
+use components::{
   AICharacterData, AIContext, AvailableActions, Blackboard, CurrentAction, Name, Navigation, Needs,
   Perception, PointOfInterest, Position,
 };
-use crate::resources::DeltaTime;
-use crate::utils;
 use specs::prelude::*;
 use std::time::Instant;
+use utils;
 
 #[derive(Default)]
 pub struct ActionSystem {}

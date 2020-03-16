@@ -1,5 +1,5 @@
+use super::utils;
 use super::{Blackboard, Name, Navigation, Needs, Perception, PointOfInterest, Position};
-use crate::utils;
 use specs::prelude::*;
 use std::time::Duration;
 
@@ -25,7 +25,7 @@ pub struct AIContext<'a> {
 
 impl<'a> AIContext<'a> {
   pub fn distance_to_pos(&self, position: Position) -> i32 {
-    utils::geom::chebyshev_dist(*self.agent.position, position)
+    utils::chebyshev_dist(*self.agent.position, position)
   }
 
   pub fn get_entity_pos(&self, entity: Option<Entity>) -> Option<Position> {

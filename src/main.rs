@@ -1,15 +1,13 @@
 #![warn(clippy::pedantic)]
 
-mod components;
 mod resources;
 mod state;
 mod systems;
-mod utils;
 
-use crate::components::*;
 use crate::state::State;
 use crate::systems::*;
 use bracket_lib::prelude::*;
+use components::*;
 use rand::Rng;
 use specs::prelude::*;
 

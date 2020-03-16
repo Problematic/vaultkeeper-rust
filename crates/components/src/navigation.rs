@@ -18,12 +18,15 @@ impl Default for Navigation {
 }
 
 impl Navigation {
-  #[must_use]
-  pub fn next(&mut self) -> Option<Position> {
-    self.path.pop_front()
-  }
-
   pub fn at_goal(&self, position: Position) -> bool {
     self.goal.is_none() || self.goal.as_ref().unwrap().contains(position)
+  }
+}
+
+impl Iterator for Navigation {
+  type Item = Position;
+
+  fn next(&mut self) -> Option<Self::Item> {
+    self.path.pop_front()
   }
 }

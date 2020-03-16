@@ -1,7 +1,7 @@
 use crate::components::{Blackboard, Name, Navigation, Needs, Perception, Position};
-use crate::utils;
 use specs::prelude::*;
 use std::time::Duration;
+use utils;
 
 #[derive(Debug)]
 pub struct AICharacterData<'a> {

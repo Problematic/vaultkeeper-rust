@@ -1,5 +1,5 @@
-use crate::utils;
 use serde::{Deserialize, Serialize};
+use utils;
 
 #[allow(dead_code)]
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

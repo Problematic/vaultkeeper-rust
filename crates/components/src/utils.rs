@@ -1,4 +1,4 @@
-use crate::components::Position;
+use super::Position;
 
 #[allow(clippy::cast_precision_loss)]
 #[allow(dead_code)]

@@ -1,7 +1,7 @@
 use super::{AIContext, Need, ResponseCurve};
-use crate::utils;
 use specs::prelude::*;
 use std::time::Duration;
+use utils::ZERO_DURATION;
 
 pub trait AIConsideration: Send + Sync + std::fmt::Debug {
   fn score(&self, _context: &mut AIContext) -> f32;
@@ -118,7 +118,7 @@ impl AIConsideration for CooldownConsideration {
   fn score(&self, context: &mut AIContext) -> f32 {
     let remaining = context.blackboard.cooldowns.entry(self.key).or_default();
 
-    if *remaining == utils::ZERO_DURATION {
+    if *remaining == ZERO_DURATION {
       context.blackboard.cooldowns.insert(self.key, self.duration);
       1.0
     } else {

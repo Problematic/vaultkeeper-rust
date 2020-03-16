@@ -277,6 +277,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "components"
+version = "0.1.0"
+dependencies = [
+ "bracket-lib",
+ "log",
+ "ordered-float",
+ "serde",
+ "specs",
+ "typetag",
+ "utils",
+]
+
+[[package]]
 name = "const-random"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1679,10 +1692,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "826e7639553986605ec5979c7dd957c7895e93eabed50ab2ffa7f6128a75097c"
 
 [[package]]
+name = "utils"
+version = "0.1.0"
+dependencies = [
+ "bracket-lib",
+ "log",
+ "serde",
+ "specs",
+ "typetag",
+]
+
+[[package]]
 name = "vaultkeeper"
 version = "0.1.0"
 dependencies = [
  "bracket-lib",
+ "components",
  "log",
  "ordered-float",
  "pathfinding",
@@ -1692,6 +1717,7 @@ dependencies = [
  "serde_json",
  "specs",
  "typetag",
+ "utils",
 ]
 
 [[package]]

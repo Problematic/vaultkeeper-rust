@@ -15,3 +15,10 @@ specs = { version = "0.16.1", features = ["specs-derive"] }
 rand = "0.7.3"
 pathfinding = "2.0.4"
 ordered-float = "1.0.2"
+utils = { path = "./crates/utils" }
+components = { path = "./crates/components" }
+
+[workspace]
+members = [
+  "crates/*",
+]

@@ -1,4 +1,4 @@
-use crate::components::*;
+use crate::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]

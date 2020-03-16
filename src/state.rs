@@ -1,6 +1,6 @@
-use crate::components::*;
 use crate::resources::*;
 use bracket_lib::prelude::*;
+use components::*;
 use specs::prelude::*;
 use std::time::Duration;
 

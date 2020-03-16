@@ -1,7 +1,7 @@
 #![allow(clippy::module_name_repetitions)]
 
+use super::utils;
 use super::Position;
-use crate::utils;
 
 pub trait Zone: Send + Sync + std::fmt::Debug {
   fn contains(&self, position: Position) -> bool;
@@ -13,7 +13,7 @@ pub struct RadialZone(pub Position, pub i32);
 
 impl Zone for RadialZone {
   fn contains(&self, position: Position) -> bool {
-    utils::geom::chebyshev_dist(self.0, position) <= self.1
+    utils::chebyshev_dist(self.0, position) <= self.1
   }
 }
 

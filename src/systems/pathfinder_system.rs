@@ -1,6 +1,5 @@
-use crate::components::{Navigation, Position};
-use crate::utils;
-use crate::{WINDOW_HEIGHT, WINDOW_WIDTH};
+use crate::{utils::chebyshev_dist, WINDOW_HEIGHT, WINDOW_WIDTH};
+use components::{Navigation, Position};
 use pathfinding::prelude::astar;
 use specs::prelude::*;
 use std::time::Instant;
@@ -22,7 +21,7 @@ impl<'a> System<'a> for PathfinderSystem {
           let result = astar(
             position,
             successors,
-            |p| utils::geom::chebyshev_dist(*position, *p),
+            |p| chebyshev_dist(*position, *p),
             |p| goal.contains(*p),
           );
 
