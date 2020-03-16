@@ -1,42 +1,25 @@
-use components::{utils::chebyshev_dist, Perception, Position, Viewshed};
-use specs::prelude::*;
+use components::utils::chebyshev_dist;
+use components::*;
+use legion::prelude::*;
 
-#[derive(Default)]
-pub struct VisibilitySystem {
-  missing_viewsheds: Vec<Entity>,
-}
+pub fn build_visibility_system() -> Box<dyn Schedulable> {
+  SystemBuilder::new("visibility")
+    .with_query(<(Read<Position>, Read<Perception>, Write<Viewshed>)>::query())
+    .with_query(<Read<Position>>::query())
+    .build(|_, mut world, _, queries| {
+      for (entity, (position, perception, mut viewshed)) in queries.0.iter_entities_mut(&mut world)
+      {
+        viewshed.visible_entities.clear();
 
-impl<'a> System<'a> for VisibilitySystem {
-  type SystemData = (
-    Entities<'a>,
-    ReadStorage<'a, Position>,
-    ReadStorage<'a, Perception>,
-    WriteStorage<'a, Viewshed>,
-  );
+        for (e, pos) in queries.1.iter_entities(&world) {
+          if e == entity {
+            continue;
+          }
 
-  fn run(&mut self, (entities, positions, perceptions, mut viewsheds): Self::SystemData) {
-    self.missing_viewsheds.clear();
-    for (entity, _, _) in (&entities, &perceptions, !&viewsheds).join() {
-      self.missing_viewsheds.push(entity);
-    }
-    for entity in self.missing_viewsheds.drain(..) {
-      viewsheds.insert(entity, Viewshed::default()).unwrap();
-    }
-
-    for (entity, position, perception, viewshed) in
-      (&entities, &positions, &perceptions, &mut viewsheds).join()
-    {
-      viewshed.visible_entities.clear();
-
-      for (e, pos) in (&entities, &positions).join() {
-        if entity == e {
-          continue;
-        }
-
-        if chebyshev_dist(*position, *pos) <= perception.range {
-          viewshed.visible_entities.push(e);
+          if chebyshev_dist(*position, *pos) <= perception.range {
+            viewshed.visible_entities.push(e);
+          }
         }
       }
-    }
-  }
+    })
 }

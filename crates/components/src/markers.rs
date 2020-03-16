@@ -1,4 +1,2 @@
-use specs::{prelude::*, Component};
-
-#[derive(Component)]
-pub struct Tickable;
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Character;

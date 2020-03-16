@@ -1,8 +1,7 @@
 use super::{Position, Zone};
-use specs::{prelude::*, Component};
 use std::collections::VecDeque;
 
-#[derive(Component, Debug)]
+#[derive(Debug)]
 pub struct Navigation {
   pub goal: Option<Box<dyn Zone>>,
   pub path: VecDeque<Position>,

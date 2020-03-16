@@ -1,7 +1,6 @@
 use bracket_lib::prelude::*;
-use specs::{prelude::*, Component};
 
-#[derive(Component)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Renderable {
   pub glyph: u8,
   pub fg: RGB,

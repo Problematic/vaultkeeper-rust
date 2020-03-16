@@ -1,55 +1,51 @@
-use crate::{utils::chebyshev_dist, WINDOW_HEIGHT, WINDOW_WIDTH};
-use components::{Navigation, Position};
+use crate::{WINDOW_HEIGHT, WINDOW_WIDTH};
+use components::utils::chebyshev_dist;
+use components::*;
+use legion::prelude::*;
 use pathfinding::prelude::astar;
-use specs::prelude::*;
 use std::time::Instant;
 
-#[derive(Default)]
-pub struct PathfinderSystem;
-
-impl<'a> System<'a> for PathfinderSystem {
-  type SystemData = (ReadStorage<'a, Position>, WriteStorage<'a, Navigation>);
-
-  fn run(&mut self, (positions, mut navigations): Self::SystemData) {
-    for (position, navigation) in (&positions, &mut navigations).join() {
-      match navigation {
-        Navigation {
-          goal: Some(goal),
-          path,
-        } if path.is_empty() => {
-          let start = Instant::now();
-          let result = astar(
-            position,
-            successors,
-            |p| chebyshev_dist(*position, *p),
-            |p| goal.contains(*p),
-          );
-
-          if let Some((path, cost)) = result {
-            log::debug!(
-              "Found path from {:?} to {:?} in {}\u{3bc}s (len={}, cost={})",
-              position,
-              goal,
-              start.elapsed().as_micros(),
-              path.len(),
-              cost
+pub fn build_pathfinder_system() -> Box<dyn Schedulable> {
+  SystemBuilder::new("pathfinder")
+    .with_query(<(Read<Position>, Write<Navigation>)>::query())
+    .build(|_, mut world, _, query| {
+      for (position, mut navigation) in query.iter_mut(&mut world) {
+        match &*navigation {
+          Navigation {
+            goal: Some(goal),
+            path,
+          } if path.is_empty() => {
+            let start = Instant::now();
+            let result = astar(
+              &*position,
+              successors,
+              |p| chebyshev_dist(*position, *p),
+              |p| goal.contains(*p),
             );
-
-            navigation.path.clear();
-            navigation.path.extend(path);
-          } else {
-            log::warn!(
-              "Couldn't find path from {:?} to {:?}, clearing goal",
-              position,
-              goal
-            );
-            navigation.goal = None;
+            if let Some((path, cost)) = result {
+              log::debug!(
+                "Found path from {:?} to {:?} in {}\u{3bc}s (len={}, cost={})",
+                position,
+                goal,
+                start.elapsed().as_micros(),
+                path.len(),
+                cost
+              );
+              navigation.path.clear();
+              navigation.path.extend(path);
+            } else {
+              log::warn!(
+                "Couldn't find path from {:?} to {:?}, clearing goal",
+                position,
+                goal
+              );
+              navigation.goal = None;
+            }
           }
+          _ => {}
         }
-        _ => {}
       }
-    }
-  }
+    })
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]

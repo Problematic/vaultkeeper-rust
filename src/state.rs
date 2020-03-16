@@ -1,46 +1,31 @@
 use crate::resources::*;
+use crate::RunState;
 use bracket_lib::prelude::*;
 use components::*;
-use specs::prelude::*;
+use legion::prelude::*;
 use std::time::Duration;
-
-#[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Clone, Copy)]
-pub enum RunState {
-  Running,
-  Paused,
-}
-
-impl std::ops::Not for RunState {
-  type Output = RunState;
-
-  fn not(self) -> Self {
-    match self {
-      RunState::Running => RunState::Paused,
-      RunState::Paused => RunState::Running,
-    }
-  }
-}
 
 pub struct State {
   pub run_state: RunState,
   pub world: World,
-  pub dispatcher: Dispatcher<'static, 'static>,
+  pub resources: Resources,
+  pub schedule: Schedule,
 }
 
 impl State {
-  pub fn new(world: World, dispatcher: Dispatcher<'static, 'static>) -> Self {
-    Self {
-      run_state: RunState::Running,
-      world,
-      dispatcher,
+  fn render(&mut self, ctx: &mut BTerm) {
+    ctx.cls();
+
+    let query = <(Read<Position>, Read<Renderable>)>::query();
+    for (pos, render) in query.iter(&self.world) {
+      ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
     }
   }
 }
 
 impl GameState for State {
   fn tick(&mut self, ctx: &mut BTerm) {
-    self.world.insert(DeltaTime(Duration::from_secs_f32(
+    self.resources.insert(DeltaTime(Duration::from_secs_f32(
       ctx.frame_time_ms / 1000.0,
     )));
 
@@ -54,17 +39,8 @@ impl GameState for State {
       }
     }
 
-    self.dispatcher.dispatch(&self.world);
-    self.world.maintain();
+    self.schedule.execute(&mut self.world, &mut self.resources);
 
-    self.world.exec(
-      |(positions, renderables): (ReadStorage<Position>, ReadStorage<Renderable>)| {
-        ctx.cls();
-
-        for (pos, render) in (&positions, &renderables).join() {
-          ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
-        }
-      },
-    );
+    self.render(ctx);
   }
 }

@@ -8,12 +8,31 @@ use crate::state::State;
 use crate::systems::*;
 use bracket_lib::prelude::*;
 use components::*;
+use legion::prelude::*;
 use rand::Rng;
-use specs::prelude::*;
 
 pub const WINDOW_WIDTH: i32 = 80;
 pub const WINDOW_HEIGHT: i32 = 60;
 
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone, Copy)]
+pub enum RunState {
+  Running,
+  Paused,
+}
+
+impl std::ops::Not for RunState {
+  type Output = RunState;
+
+  fn not(self) -> Self {
+    match self {
+      RunState::Running => RunState::Paused,
+      RunState::Paused => RunState::Running,
+    }
+  }
+}
+
+#[allow(clippy::too_many_lines)]
 fn main() {
   pretty_env_logger::init_timed();
   let mut rng = rand::thread_rng();
@@ -24,86 +43,84 @@ fn main() {
     .with_fps_cap(5.0) // TODO: limit agent tick rate without FPS cap
     .build();
 
-  let db = DispatcherBuilder::new()
-    .with(VisibilitySystem::default(), "visibility", &[])
-    .with(NeedDecaySystem::default(), "need_decay", &[])
-    .with(PathfinderSystem::default(), "pathfinder", &[])
-    .with(MovementSystem::default(), "movement", &["pathfinder"])
-    .with_barrier()
-    .with(ActionSystem::default(), "action", &[])
-    .with_barrier();
+  let universe = Universe::new();
+  let world = universe.create_world();
 
-  db.print_par_seq();
-
-  let mut dispatcher = db.build();
-  let mut world = World::new();
-  dispatcher.setup(&mut world);
-
-  world.register::<Renderable>();
-  world.register::<Name>();
-  world.register::<Character>();
-
-  let mut state = State::new(world, dispatcher);
-
-  state
-    .world
-    .create_entity()
-    .with(Name::new("Watercooler"))
-    .with(Position::new(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
-    .with(Renderable {
-      glyph: to_cp437('#'),
-      fg: RGB::named(AQUA),
-      bg: RGB::named(BLACK),
-    })
-    .with(PointOfInterest {
-      is_global: true,
-      need: Need::Social,
-      range: 4,
-    })
+  let schedule = Schedule::builder()
+    .add_system(build_need_decay_system())
+    .add_system(build_visibility_system())
+    .add_system(build_pathfinder_system())
+    .add_system(build_movement_system())
+    .flush()
     .build();
 
-  state
-    .world
-    .create_entity()
-    .with(Name::new("Cake"))
-    .with(Position::new(70, 45))
-    .with(Renderable {
-      glyph: to_cp437('O'),
-      fg: RGB::named(PINK),
-      bg: RGB::named(BLACK),
-    })
-    .with(PointOfInterest {
-      is_global: false,
-      need: Need::Hunger,
-      range: 1,
-    })
-    .build();
+  let mut state = State {
+    run_state: RunState::Running,
+    world,
+    resources: Resources::default(),
+    schedule,
+  };
 
-  for (idx, pos) in [Position::new(10, 10), Position::new(70, 50)]
-    .iter()
-    .enumerate()
-  {
-    state
-      .world
-      .create_entity()
-      .with(Name::new(format!("Vaultizen #{:0>3}", idx + 1)))
-      .with(Character)
-      .with(*pos)
-      .with(Renderable {
-        glyph: to_cp437('☺'),
-        fg: RGB::named(WHITE),
+  state.world.insert(
+    (),
+    vec![(
+      Name::new("Watercooler"),
+      Position::new(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2),
+      Renderable {
+        glyph: to_cp437('#'),
+        fg: RGB::named(AQUA),
         bg: RGB::named(BLACK),
-      })
-      .with(Perception { range: 5 })
-      .with(Needs::from(vec![
-        (Need::Hunger, rng.gen_range(35.0, 75.0)),
-        (Need::Social, rng.gen_range(35.0, 75.0)),
-      ]))
-      .with(Navigation::default())
-      .with(AvailableActions::default())
-      .with(Blackboard::default())
-      .build();
-  }
+      },
+      PointOfInterest {
+        is_global: true,
+        need: Need::Social,
+        range: 4,
+      },
+    )],
+  );
+
+  state.world.insert(
+    (),
+    vec![(
+      Name::new("Cake"),
+      Position::new(70, 45),
+      Renderable {
+        glyph: to_cp437('O'),
+        fg: RGB::named(PINK),
+        bg: RGB::named(BLACK),
+      },
+      PointOfInterest {
+        is_global: false,
+        need: Need::Hunger,
+        range: 1,
+      },
+    )],
+  );
+
+  state.world.insert(
+    (Character,),
+    vec![Position::new(10, 10), Position::new(70, 50)]
+      .into_iter()
+      .enumerate()
+      .map(|(idx, pos)| {
+        (
+          Name::new(format!("Vaultizen #{:0>3}", idx + 1)),
+          pos,
+          Renderable {
+            glyph: to_cp437('☺'),
+            fg: RGB::named(WHITE),
+            bg: RGB::named(BLACK),
+          },
+          Perception { range: 5 },
+          Needs::from(vec![
+            (Need::Hunger, rng.gen_range(35.0, 75.0)),
+            (Need::Social, rng.gen_range(35.0, 75.0)),
+          ]),
+          Navigation::default(),
+          Viewshed::default(),
+        )
+      }),
+  );
 
   main_loop(context, state);
 }

@@ -5,18 +5,19 @@ authors = ["Derek Stobbe <djstobbe@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+bracket-lib = { version = "0.7.0", features = ["serde"] }
+legion = { git = "https://github.com/TomGillen/legion", features = ["default", "serialize"] }
 log = "0.4.8"
+ordered-float = "1.0.2"
+pathfinding = "2.0.4"
 pretty_env_logger = "0.4.0"
+rand = "0.7.3"
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = "1.0.48"
 typetag = "0.1.4"
-bracket-lib = { version = "0.7.0", features = ["specs", "serde"] }
-specs = { version = "0.16.1", features = ["specs-derive"] }
-rand = "0.7.3"
-pathfinding = "2.0.4"
-ordered-float = "1.0.2"
-utils = { path = "./crates/utils" }
+
 components = { path = "./crates/components" }
+utils = { path = "./crates/utils" }
 
 [workspace]
 members = [

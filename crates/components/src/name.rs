@@ -1,7 +1,6 @@
-use specs::{prelude::*, Component};
 use std::borrow::Cow;
 
-#[derive(Component, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Name(Cow<'static, str>);
 
 impl Name {

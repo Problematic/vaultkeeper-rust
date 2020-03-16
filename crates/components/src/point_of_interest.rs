@@ -1,7 +1,6 @@
 use super::Need;
-use specs::{prelude::*, Component};
 
-#[derive(Component, Debug)]
+#[derive(Debug)]
 pub struct PointOfInterest {
   pub need: Need,
   pub range: i32,

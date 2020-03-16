@@ -1,21 +1,19 @@
 use crate::resources::DeltaTime;
-use components::Needs;
-use specs::prelude::*;
+use components::*;
+use legion::prelude::*;
 
-#[derive(Default)]
-pub struct NeedDecaySystem;
+pub fn build_need_decay_system() -> Box<dyn Schedulable> {
+  SystemBuilder::new("need_decay")
+    .read_resource::<DeltaTime>()
+    .with_query(<(Write<Needs>,)>::query())
+    .build(|_, mut world, delta_time, query| {
+      let DeltaTime(dt) = **delta_time;
 
-impl<'a> System<'a> for NeedDecaySystem {
-  type SystemData = (ReadExpect<'a, DeltaTime>, WriteStorage<'a, Needs>);
-
-  fn run(&mut self, (delta_time, mut needs): Self::SystemData) {
-    let DeltaTime(dt) = *delta_time;
-
-    for (needs,) in (&mut needs,).join() {
-      for val in needs.0.values_mut() {
-        // TODO: adjust this with agent personality stats
-        *val -= dt.as_secs_f32();
+      for (mut needs,) in query.iter_mut(&mut world) {
+        for val in needs.0.values_mut() {
+          // TODO: adjust this with agent personality stats
+          *val -= dt.as_secs_f32();
+        }
       }
-    }
-  }
+    })
 }

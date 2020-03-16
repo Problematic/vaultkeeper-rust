@@ -1,7 +1,7 @@
 use super::Position;
-use specs::{prelude::*, Component};
+use legion::prelude::Entity;
 
-#[derive(Component, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct Viewshed {
   pub visible_entities: Vec<Entity>,
   pub visible_tiles: Vec<Position>,

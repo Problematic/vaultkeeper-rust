@@ -1,6 +1,4 @@
-use specs::{prelude::*, Component};
-
-#[derive(Component, Debug)]
+#[derive(Debug)]
 pub struct Perception {
   pub range: i32,
 }

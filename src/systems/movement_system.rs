@@ -1,17 +1,14 @@
-use components::{Navigation, Position};
-use specs::prelude::*;
+use components::*;
+use legion::prelude::*;
 
-#[derive(Default)]
-pub struct MovementSystem {}
-
-impl<'a> System<'a> for MovementSystem {
-  type SystemData = (WriteStorage<'a, Position>, WriteStorage<'a, Navigation>);
-
-  fn run(&mut self, (mut positions, mut navigations): Self::SystemData) {
-    for (position, navigation) in (&mut positions, &mut navigations).join() {
-      if let Some(pos) = navigation.next() {
-        *position = pos;
+pub fn build_movement_system() -> Box<dyn Schedulable> {
+  SystemBuilder::new("movement")
+    .with_query(<(Write<Position>, Write<Navigation>)>::query())
+    .build(|_, mut world, _, query| {
+      for (mut position, mut nav) in query.iter_mut(&mut world) {
+        if let Some(pos) = nav.next() {
+          *position = pos;
+        }
       }
-    }
-  }
+    })
 }
