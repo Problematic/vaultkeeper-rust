@@ -1,33 +1,33 @@
 #![warn(clippy::pedantic)]
 
-mod state;
+mod game;
+mod states;
 mod systems;
 
-use crate::state::State;
+use crate::game::*;
+use crate::states::*;
 use crate::systems::*;
-use ai::*;
 use bracket_lib::prelude::*;
-use components::*;
 use legion::prelude::*;
-use rand::Rng;
+use resources::*;
 
 pub const WINDOW_WIDTH: i32 = 80;
 pub const WINDOW_HEIGHT: i32 = 60;
 
-#[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Clone, Copy)]
-pub enum RunState {
-  Running,
-  Paused,
+#[derive(Debug, PartialEq)]
+pub enum GameMode {
+  Sim,
+  Delve,
 }
 
-impl std::ops::Not for RunState {
-  type Output = RunState;
+impl std::str::FromStr for GameMode {
+  type Err = ();
 
-  fn not(self) -> Self {
-    match self {
-      RunState::Running => RunState::Paused,
-      RunState::Paused => RunState::Running,
+  fn from_str(s: &str) -> Result<GameMode, Self::Err> {
+    match s {
+      "delve" => Ok(GameMode::Delve),
+      "sim" | "simulation" => Ok(GameMode::Sim),
+      _ => Err(()),
     }
   }
 }
@@ -35,12 +35,19 @@ impl std::ops::Not for RunState {
 #[allow(clippy::too_many_lines)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   pretty_env_logger::init_timed();
-  let mut rng = rand::thread_rng();
 
-  let context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)?
+  let args: Vec<String> = std::env::args().collect();
+  let mode = if args.len() >= 2 {
+    args[1]
+      .parse::<GameMode>()
+      .expect("Unrecognized mode; expected one of `sim | delve`")
+  } else {
+    GameMode::Sim
+  };
+
+  let mut context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)?
     .with_title("Vaultkeeper")
     .with_tile_dimensions(16, 16)
-    .with_fps_cap(5.0) // TODO: limit agent tick rate without FPS cap
     .build()?;
 
   let universe = Universe::new();
@@ -55,71 +62,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let sb = ai::systems::register_systems(sb);
 
-  let mut state = State {
-    run_state: RunState::Running,
-    world,
-    resources: Resources::default(),
-    schedule: sb.build(),
+  let mut resources = Resources::default();
+
+  let state: Box<dyn VaultkeeperState> = match mode {
+    GameMode::Delve => Box::new(DelveState::default()),
+    GameMode::Sim => Box::new(SimState::default()),
   };
 
-  state.world.insert(
-    (),
-    vec![
-      (
-        Name::new("Watercooler"),
-        Position::new(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2),
-        Renderable {
-          glyph: to_cp437('#'),
-          colors: ColorPair {
-            fg: RGBA::named(AQUA),
-            bg: RGBA::named(BLACK),
-          },
-        },
-        Some(PointOfInterest(Need::Social)),
-        Interactable { actions: vec![] },
-      ),
-      (
-        Name::new("Cake"),
-        Position::new(70, 45),
-        Renderable {
-          glyph: to_cp437('O'),
-          colors: ColorPair {
-            fg: RGBA::named(PINK),
-            bg: RGBA::named(BLACK),
-          },
-        },
-        None::<PointOfInterest>,
-        Interactable { actions: vec![] },
-      ),
-    ],
-  );
+  let mut game = Game {
+    context: WorldContext { world, resources },
+    schedule: sb.build(),
+    state_stack: vec![state],
+  };
 
-  state.world.insert(
-    (Character,),
-    vec![Position::new(10, 10), Position::new(70, 50)]
-      .into_iter()
-      .enumerate()
-      .map(|(idx, pos)| {
-        (
-          Name::new(format!("Vaultizen #{:0>3}", idx + 1)),
-          pos,
-          Renderable {
-            glyph: to_cp437('☺'),
-            colors: ColorPair {
-              fg: RGBA::named(WHITE),
-              bg: RGBA::named(BLACK),
-            },
-          },
-          Needs::from(vec![
-            (Need::Hunger, rng.gen_range(35.0, 75.0)),
-            (Need::Social, rng.gen_range(35.0, 75.0)),
-          ]),
-          Navigation::default(),
-          Viewshed::default(),
-          None::<Action>,
-        )
-      }),
-  );
+  game.init(&mut context);
 
-  main_loop(context, state)
+  main_loop(context, game)
 }
