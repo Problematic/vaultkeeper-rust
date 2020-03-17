@@ -1,8 +1,8 @@
-use crate::resources::*;
 use crate::RunState;
 use bracket_lib::prelude::*;
 use components::*;
 use legion::prelude::*;
+use resources::*;
 use std::time::Duration;
 
 pub struct State {

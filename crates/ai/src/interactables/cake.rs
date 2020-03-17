@@ -1,37 +1,36 @@
-use crate::*;
-use serde::{Deserialize, Serialize};
+use legion::prelude::*;
+use resources::DeltaTime;
+use std::time::Duration;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy)]
 pub struct Cake {
   pub slices_remaining: u8,
 }
 
-#[typetag::serde]
-impl Interactable for Cake {
-  fn evaluate(
-    &mut self,
-    _context: &mut AIContext,
-  ) -> Option<(Box<dyn Interaction<State = Self>>, f32)> {
-    None
-  }
+#[derive(Debug, Clone, Copy)]
+pub struct EatCakeInteraction {
+  interactable: Entity,
+  agent: Entity,
+  time_remaining: Duration,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct EatCakeInteraction {}
+pub fn build_system() -> Box<dyn Schedulable> {
+  SystemBuilder::new("cake_interactable")
+    .read_resource::<DeltaTime>()
+    .with_query(<Write<Cake>>::query())
+    .with_query(<Write<EatCakeInteraction>>::query())
+    .build(|cmd, mut world, delta_time, queries| {
+      dbg!("doop?");
 
-impl Interaction for EatCakeInteraction {
-  type State = Cake;
-
-  fn start(&mut self, _: &mut Self::State, _: &mut AIContext) {
-    log::info!("om...");
-  }
-
-  fn update(&mut self, _: &mut Self::State, _: &mut AIContext) {
-    log::info!("... nom ...");
-  }
-
-  fn stop(&mut self, state: &mut Self::State, _: &mut AIContext) {
-    log::info!("... glomph!");
-    state.slices_remaining -= 1;
-  }
+      for (entity, mut interaction) in queries.1.iter_entities_mut(&mut world) {
+        if let Some(remaining) = interaction
+          .time_remaining
+          .checked_sub(delta_time.as_duration())
+        {
+          interaction.time_remaining = remaining;
+        } else {
+          cmd.delete(entity);
+        }
+      }
+    })
 }

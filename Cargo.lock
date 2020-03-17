@@ -20,6 +20,8 @@ name = "ai"
 version = "0.1.0"
 dependencies = [
  "components",
+ "legion",
+ "resources",
 ]
 
 [[package]]
@@ -1405,6 +1407,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1132f845907680735a84409c3bebc64d1364a5683ffbce899550cd09d5eaefc1"
 
 [[package]]
+name = "resources"
+version = "0.1.0"
+
+[[package]]
 name = "rustc_version"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1739,6 +1745,7 @@ dependencies = [
 name = "vaultkeeper"
 version = "0.1.0"
 dependencies = [
+ "ai",
  "bracket-lib",
  "components",
  "legion",
@@ -1747,6 +1754,7 @@ dependencies = [
  "pathfinding",
  "pretty_env_logger",
  "rand",
+ "resources",
  "serde",
  "serde_json",
  "typetag",

@@ -1,6 +1,5 @@
 #![warn(clippy::pedantic)]
 
-mod resources;
 mod state;
 mod systems;
 
@@ -46,19 +45,19 @@ fn main() {
   let universe = Universe::new();
   let world = universe.create_world();
 
-  let schedule = Schedule::builder()
+  let sb = Schedule::builder()
     .add_system(build_need_decay_system())
     .add_system(build_visibility_system())
     .add_system(build_pathfinder_system())
     .add_system(build_movement_system())
-    .flush()
-    .build();
+    .add_system(ai::interactables::cake::build_system())
+    .flush();
 
   let mut state = State {
     run_state: RunState::Running,
     world,
     resources: Resources::default(),
-    schedule,
+    schedule: sb.build(),
   };
 
   state.world.insert(

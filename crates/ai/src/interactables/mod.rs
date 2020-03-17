@@ -1,3 +1,1 @@
-mod cake;
-
-pub use cake::*;
+pub mod cake;
