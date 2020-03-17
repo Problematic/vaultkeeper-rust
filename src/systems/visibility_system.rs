@@ -4,11 +4,10 @@ use legion::prelude::*;
 
 pub fn build_visibility_system() -> Box<dyn Schedulable> {
   SystemBuilder::new("visibility")
-    .with_query(<(Read<Position>, Read<Perception>, Write<Viewshed>)>::query())
+    .with_query(<(Read<Position>, Write<Viewshed>)>::query())
     .with_query(<Read<Position>>::query())
     .build(|_, mut world, _, queries| {
-      for (entity, (position, perception, mut viewshed)) in queries.0.iter_entities_mut(&mut world)
-      {
+      for (entity, (position, mut viewshed)) in queries.0.iter_entities_mut(&mut world) {
         viewshed.visible_entities.clear();
 
         for (e, pos) in queries.1.iter_entities(&world) {
@@ -16,7 +15,7 @@ pub fn build_visibility_system() -> Box<dyn Schedulable> {
             continue;
           }
 
-          if chebyshev_dist(*position, *pos) <= perception.range {
+          if chebyshev_dist(*position, *pos) <= viewshed.range {
             viewshed.visible_entities.push(e);
           }
         }

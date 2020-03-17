@@ -21,6 +21,7 @@ version = "0.1.0"
 dependencies = [
  "components",
  "legion",
+ "log",
  "resources",
 ]
 
@@ -106,27 +107,27 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 [[package]]
 name = "bracket-algorithm-traits"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b34986509c66545ca3b663bcc2e965c3f7c341b7941130aa76f794bd0413601"
+source = "git+https://github.com/thebracket/bracket-lib#c68d5303e1ab4c68eb3e3f3f42bf95b97843dfbe"
 dependencies = [
  "bracket-geometry",
+ "smallvec 1.2.0",
 ]
 
 [[package]]
 name = "bracket-color"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7e018d946b451de3736ee290fd507128ba2ff65318abb885095c261adacf086"
+source = "git+https://github.com/thebracket/bracket-lib#c68d5303e1ab4c68eb3e3f3f42bf95b97843dfbe"
 dependencies = [
  "byteorder",
+ "lazy_static",
+ "parking_lot 0.10.0",
  "serde",
 ]
 
 [[package]]
 name = "bracket-geometry"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b198839a12c01f6b94e1b0cf89f214055415d16713bb6b1711ddf412a2f9410"
+source = "git+https://github.com/thebracket/bracket-lib#c68d5303e1ab4c68eb3e3f3f42bf95b97843dfbe"
 dependencies = [
  "serde",
  "ultraviolet",
@@ -135,8 +136,7 @@ dependencies = [
 [[package]]
 name = "bracket-lib"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfd684cf6ec34fe5a40c7901d41f599a784d1664ce9679de7a8ec0c6db22c53a"
+source = "git+https://github.com/thebracket/bracket-lib#c68d5303e1ab4c68eb3e3f3f42bf95b97843dfbe"
 dependencies = [
  "bracket-algorithm-traits",
  "bracket-color",
@@ -150,8 +150,7 @@ dependencies = [
 [[package]]
 name = "bracket-noise"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73eb3a22f93071da8b97a46c14d3c6eff2aa4534aa20ecd72f569a7cb07ab4b7"
+source = "git+https://github.com/thebracket/bracket-lib#c68d5303e1ab4c68eb3e3f3f42bf95b97843dfbe"
 dependencies = [
  "bracket-random",
 ]
@@ -159,18 +158,17 @@ dependencies = [
 [[package]]
 name = "bracket-pathfinding"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28514ec749b74dd6ddf33181f8d153a7c1f80e69390bdefc27e17238be462fa5"
+source = "git+https://github.com/thebracket/bracket-lib#c68d5303e1ab4c68eb3e3f3f42bf95b97843dfbe"
 dependencies = [
  "bracket-algorithm-traits",
  "bracket-geometry",
+ "smallvec 1.2.0",
 ]
 
 [[package]]
 name = "bracket-random"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42526076c57e3f7d5e77c0d0915eab6b932ab32d3f8b8fcd4582abe998f35d8f"
+source = "git+https://github.com/thebracket/bracket-lib#c68d5303e1ab4c68eb3e3f3f42bf95b97843dfbe"
 dependencies = [
  "lazy_static",
  "rand",
@@ -182,23 +180,25 @@ dependencies = [
 [[package]]
 name = "bracket-terminal"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80f589388c79ea13561bc75994378a6df172b05a09f5ca5e4dbb16fbeab8efb5"
+source = "git+https://github.com/thebracket/bracket-lib#c68d5303e1ab4c68eb3e3f3f42bf95b97843dfbe"
 dependencies = [
  "bracket-color",
  "bracket-geometry",
  "byteorder",
+ "console_error_panic_hook",
  "flate2",
  "glow",
  "glutin",
  "image",
  "lazy_static",
  "object-pool",
+ "parking_lot 0.10.0",
  "rand",
  "ultraviolet",
  "wasm-bindgen",
  "wasm-timer",
  "web-sys",
+ "winit",
 ]
 
 [[package]]
@@ -295,6 +295,16 @@ dependencies = [
  "serde",
  "typetag",
  "utils",
+]
+
+[[package]]
+name = "console_error_panic_hook"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8d976903543e0c48546a91908f21588a680a8c8f984df9a5d69feccb2b2a211"
+dependencies = [
+ "cfg-if",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -736,6 +746,9 @@ name = "instant"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c346c299e3fe8ef94dc10c2c0253d858a69aac1245157a3bf4125915d528caf"
+dependencies = [
+ "web-sys",
+]
 
 [[package]]
 name = "inventory"
@@ -1998,7 +2011,9 @@ dependencies = [
  "percent-encoding",
  "raw-window-handle",
  "smithay-client-toolkit",
+ "wasm-bindgen",
  "wayland-client",
+ "web-sys",
  "winapi 0.3.8",
  "x11-dl",
 ]

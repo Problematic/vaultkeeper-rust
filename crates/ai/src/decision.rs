@@ -1,16 +1,15 @@
-use super::{AIAction, AIConsideration, AIContext};
+use super::{Consideration, Context};
 use std::borrow::Cow;
 
 pub struct Decision {
   pub name: Cow<'static, str>,
   pub weight: f32,
-  pub action: AIAction,
-  pub considerations: Vec<Box<dyn AIConsideration>>,
+  pub considerations: Vec<Box<dyn Consideration>>,
 }
 
 impl Decision {
   #[allow(clippy::cast_precision_loss)]
-  pub fn score(&self, context: &mut AIContext) -> f32 {
+  pub fn score(&self, context: &mut dyn Context) -> f32 {
     if self.considerations.is_empty() {
       return 0.0;
     }

@@ -5,6 +5,7 @@ mod systems;
 
 use crate::state::State;
 use crate::systems::*;
+use ai::*;
 use bracket_lib::prelude::*;
 use components::*;
 use legion::prelude::*;
@@ -32,15 +33,15 @@ impl std::ops::Not for RunState {
 }
 
 #[allow(clippy::too_many_lines)]
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
   pretty_env_logger::init_timed();
   let mut rng = rand::thread_rng();
 
-  let context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)
+  let context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)?
     .with_title("Vaultkeeper")
     .with_tile_dimensions(16, 16)
     .with_fps_cap(5.0) // TODO: limit agent tick rate without FPS cap
-    .build();
+    .build()?;
 
   let universe = Universe::new();
   let world = universe.create_world();
@@ -50,8 +51,9 @@ fn main() {
     .add_system(build_visibility_system())
     .add_system(build_pathfinder_system())
     .add_system(build_movement_system())
-    .add_system(ai::interactables::cake::build_system())
     .flush();
+
+  let sb = ai::systems::register_systems(sb);
 
   let mut state = State {
     run_state: RunState::Running,
@@ -62,38 +64,34 @@ fn main() {
 
   state.world.insert(
     (),
-    vec![(
-      Name::new("Watercooler"),
-      Position::new(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2),
-      Renderable {
-        glyph: to_cp437('#'),
-        fg: RGB::named(AQUA),
-        bg: RGB::named(BLACK),
-      },
-      PointOfInterest {
-        is_global: true,
-        need: Need::Social,
-        range: 4,
-      },
-    )],
-  );
-
-  state.world.insert(
-    (),
-    vec![(
-      Name::new("Cake"),
-      Position::new(70, 45),
-      Renderable {
-        glyph: to_cp437('O'),
-        fg: RGB::named(PINK),
-        bg: RGB::named(BLACK),
-      },
-      PointOfInterest {
-        is_global: false,
-        need: Need::Hunger,
-        range: 1,
-      },
-    )],
+    vec![
+      (
+        Name::new("Watercooler"),
+        Position::new(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2),
+        Renderable {
+          glyph: to_cp437('#'),
+          colors: ColorPair {
+            fg: RGBA::named(AQUA),
+            bg: RGBA::named(BLACK),
+          },
+        },
+        Some(PointOfInterest(Need::Social)),
+        Interactable { actions: vec![] },
+      ),
+      (
+        Name::new("Cake"),
+        Position::new(70, 45),
+        Renderable {
+          glyph: to_cp437('O'),
+          colors: ColorPair {
+            fg: RGBA::named(PINK),
+            bg: RGBA::named(BLACK),
+          },
+        },
+        None::<PointOfInterest>,
+        Interactable { actions: vec![] },
+      ),
+    ],
   );
 
   state.world.insert(
@@ -107,19 +105,21 @@ fn main() {
           pos,
           Renderable {
             glyph: to_cp437('☺'),
-            fg: RGB::named(WHITE),
-            bg: RGB::named(BLACK),
+            colors: ColorPair {
+              fg: RGBA::named(WHITE),
+              bg: RGBA::named(BLACK),
+            },
           },
-          Perception { range: 5 },
           Needs::from(vec![
             (Need::Hunger, rng.gen_range(35.0, 75.0)),
             (Need::Social, rng.gen_range(35.0, 75.0)),
           ]),
           Navigation::default(),
           Viewshed::default(),
+          None::<Action>,
         )
       }),
   );
 
-  main_loop(context, state);
+  main_loop(context, state)
 }

@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-bracket-lib = { version = "0.7.0", features = ["serde"] }
+bracket-lib = { git = "https://github.com/thebracket/bracket-lib", features = ["serde"] }
 log = "0.4.8"
 serde = { version = "1.0.104", features = ["derive"] }

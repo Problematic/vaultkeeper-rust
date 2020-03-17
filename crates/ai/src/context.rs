@@ -1,1 +1,1 @@
-pub struct AIContext {}
+pub trait Context {}

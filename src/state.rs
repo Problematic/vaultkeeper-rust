@@ -18,7 +18,13 @@ impl State {
 
     let query = <(Read<Position>, Read<Renderable>)>::query();
     for (pos, render) in query.iter(&self.world) {
-      ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
+      ctx.set(
+        pos.x,
+        pos.y,
+        render.colors.fg,
+        render.colors.bg,
+        render.glyph,
+      );
     }
   }
 }

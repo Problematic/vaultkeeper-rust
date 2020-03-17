@@ -19,9 +19,8 @@ pub fn build_system() -> Box<dyn Schedulable> {
     .read_resource::<DeltaTime>()
     .with_query(<Write<Cake>>::query())
     .with_query(<Write<EatCakeInteraction>>::query())
+    .write_component::<Cake>()
     .build(|cmd, mut world, delta_time, queries| {
-      dbg!("doop?");
-
       for (entity, mut interaction) in queries.1.iter_entities_mut(&mut world) {
         if let Some(remaining) = interaction
           .time_remaining
@@ -29,6 +28,9 @@ pub fn build_system() -> Box<dyn Schedulable> {
         {
           interaction.time_remaining = remaining;
         } else {
+          if let Some(mut cake) = world.get_component_mut::<Cake>(interaction.interactable) {
+            cake.slices_remaining = cake.slices_remaining.saturating_sub(1);
+          }
           cmd.delete(entity);
         }
       }
