@@ -1,5 +1,3 @@
-use components::Position;
-
 #[derive(Debug, PartialEq, Eq)]
 pub enum MoveDirection {
   Up,

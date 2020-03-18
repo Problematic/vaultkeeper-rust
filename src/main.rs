@@ -10,28 +10,11 @@ use crate::systems::*;
 use bracket_lib::prelude::*;
 use legion::prelude::*;
 use vaultkeeper_delve;
-use vaultkeeper_shared::{PlayerInput, State, Time, WorldContext};
+use vaultkeeper_shared::map as vk_map;
+use vaultkeeper_shared::*;
 
 pub const WINDOW_WIDTH: i32 = 80;
 pub const WINDOW_HEIGHT: i32 = 60;
-
-#[derive(Debug, PartialEq)]
-pub enum GameMode {
-  Sim,
-  Delve,
-}
-
-impl std::str::FromStr for GameMode {
-  type Err = ();
-
-  fn from_str(s: &str) -> Result<GameMode, Self::Err> {
-    match s {
-      "delve" => Ok(GameMode::Delve),
-      "sim" | "simulation" => Ok(GameMode::Sim),
-      _ => Err(()),
-    }
-  }
-}
 
 #[allow(clippy::too_many_lines)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -39,13 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   // TODO: replace this with a main menu
   let args: Vec<String> = std::env::args().collect();
-  let mode = if args.len() >= 2 {
-    args[1]
-      .parse::<GameMode>()
-      .expect("Unrecognized mode; expected one of `sim | delve`")
-  } else {
-    GameMode::Delve
-  };
+  let mode = if args.len() >= 2 { &args[1] } else { "delve" };
 
   let mut context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)?
     .with_title("Vaultkeeper")
@@ -69,9 +46,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   resources.insert(Time::default());
   resources.insert(PlayerInput::default());
 
+  let map = vk_map::generators::BSPMapGenerator::<vk_map::MapTile>::new()
+    .with_dimensions(WINDOW_WIDTH, WINDOW_HEIGHT)
+    .with_impassible_borders(true)
+    .with_iterations(4)
+    .with_alpha(0.5)
+    .build();
+
+  resources.insert(map);
+
   let state: Box<dyn State> = match mode {
-    GameMode::Delve => Box::new(vaultkeeper_delve::states::MainState::default()),
-    GameMode::Sim => Box::new(SimState::default()),
+    "sim" => Box::new(SimState::default()),
+    "delve" => Box::new(vaultkeeper_delve::states::MainState::default()),
+    _ => panic!("Unrecognized mode; expected one of `sim | delve`"),
   };
 
   let mut game = Game {

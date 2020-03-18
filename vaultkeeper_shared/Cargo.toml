@@ -6,5 +6,6 @@ edition = "2018"
 [dependencies]
 bracket-lib = { git = "https://github.com/thebracket/bracket-lib", features = ["serde"] }
 legion = { git = "https://github.com/TomGillen/legion", features = ["default", "serialize"] }
+rand = "0.7.3"
 
 components = { path = "../crates/components" }
