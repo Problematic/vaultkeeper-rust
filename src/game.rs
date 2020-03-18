@@ -1,42 +1,13 @@
 use bracket_lib::prelude::*;
 use components::*;
 use legion::prelude::*;
-use resources::*;
 use std::time::Duration;
-
-pub trait VaultkeeperState: std::fmt::Debug {
-  fn on_start(&mut self, _term: &mut BTerm, _context: &mut WorldContext) {}
-
-  fn on_stop(&mut self, _term: &mut BTerm, _context: &mut WorldContext) {}
-
-  fn on_pause(&mut self, _term: &mut BTerm, _context: &mut WorldContext) {}
-
-  fn on_resume(&mut self, _term: &mut BTerm, _context: &mut WorldContext) {}
-
-  fn update(&mut self, _term: &mut BTerm, _context: &mut WorldContext) -> Transition {
-    Transition::None
-  }
-}
-
-#[allow(dead_code)]
-#[derive(Debug)]
-pub enum Transition {
-  None,
-  Push(Box<dyn VaultkeeperState>),
-  Switch(Box<dyn VaultkeeperState>),
-  Pop,
-  Quit,
-}
-
-pub struct WorldContext {
-  pub world: World,
-  pub resources: Resources,
-}
+use vaultkeeper_shared::{MoveDirection, PlayerInput, State, Time, Transition, WorldContext};
 
 pub struct Game {
   pub schedule: Schedule,
   pub context: WorldContext,
-  pub state_stack: Vec<Box<dyn VaultkeeperState>>,
+  pub state_stack: Vec<Box<dyn State>>,
 }
 
 impl Game {
@@ -54,16 +25,27 @@ impl GameState for Game {
     self
       .context
       .resources
-      .insert(DeltaTime(Duration::from_secs_f32(
-        term.frame_time_ms / 1000.0,
-      )));
+      .get_mut::<Time>()
+      .unwrap()
+      .capture(Duration::from_secs_f32(term.frame_time_ms / 1000.0));
 
     term.cls();
 
     if let Some(VirtualKeyCode::Escape) = term.key {
-      // TODO: signal states to shut down (save, etc)
       term.quit();
       return;
+    }
+
+    {
+      let mut player_input = self.context.resources.get_mut::<PlayerInput>().unwrap();
+
+      player_input.move_dir = match term.key {
+        Some(VirtualKeyCode::W) => Some(MoveDirection::Up),
+        Some(VirtualKeyCode::A) => Some(MoveDirection::Left),
+        Some(VirtualKeyCode::S) => Some(MoveDirection::Down),
+        Some(VirtualKeyCode::D) => Some(MoveDirection::Right),
+        _ => None,
+      };
     }
 
     self
@@ -72,10 +54,6 @@ impl GameState for Game {
 
     if let Some(mut active) = self.state_stack.pop() {
       let transition = active.update(term, &mut self.context);
-
-      if !matches!(transition, Transition::None) {
-        log::debug!("{:?}", transition);
-      }
 
       match transition {
         Transition::Push(mut state) => {

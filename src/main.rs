@@ -9,7 +9,8 @@ use crate::states::*;
 use crate::systems::*;
 use bracket_lib::prelude::*;
 use legion::prelude::*;
-use resources::*;
+use vaultkeeper_delve;
+use vaultkeeper_shared::{PlayerInput, State, Time, WorldContext};
 
 pub const WINDOW_WIDTH: i32 = 80;
 pub const WINDOW_HEIGHT: i32 = 60;
@@ -36,18 +37,20 @@ impl std::str::FromStr for GameMode {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   pretty_env_logger::init_timed();
 
+  // TODO: replace this with a main menu
   let args: Vec<String> = std::env::args().collect();
   let mode = if args.len() >= 2 {
     args[1]
       .parse::<GameMode>()
       .expect("Unrecognized mode; expected one of `sim | delve`")
   } else {
-    GameMode::Sim
+    GameMode::Delve
   };
 
   let mut context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)?
     .with_title("Vaultkeeper")
     .with_tile_dimensions(16, 16)
+    .with_advanced_input(true)
     .build()?;
 
   let universe = Universe::new();
@@ -63,9 +66,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let sb = ai::systems::register_systems(sb);
 
   let mut resources = Resources::default();
+  resources.insert(Time::default());
+  resources.insert(PlayerInput::default());
 
-  let state: Box<dyn VaultkeeperState> = match mode {
-    GameMode::Delve => Box::new(DelveState::default()),
+  let state: Box<dyn State> = match mode {
+    GameMode::Delve => Box::new(vaultkeeper_delve::states::MainState::default()),
     GameMode::Sim => Box::new(SimState::default()),
   };
 

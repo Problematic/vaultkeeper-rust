@@ -8,4 +8,4 @@ legion = { git = "https://github.com/TomGillen/legion" }
 log = "0.4.8"
 
 components = { path = "../components"}
-resources = { path = "../resources" }
+vaultkeeper_shared = { path = "../../vaultkeeper_shared" }

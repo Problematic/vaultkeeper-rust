@@ -18,10 +18,13 @@ typetag = "0.1.4"
 
 ai = { path = "./crates/ai" }
 components = { path = "./crates/components" }
-resources = { path = "./crates/resources" }
 utils = { path = "./crates/utils" }
+vaultkeeper_shared = { path = "./vaultkeeper_shared" }
+vaultkeeper_delve = { path = "./vaultkeeper_delve" }
 
 [workspace]
 members = [
   "crates/*",
+  "vaultkeeper_shared",
+  "vaultkeeper_delve",
 ]

@@ -1,15 +1,14 @@
-use super::PauseState;
-use crate::game::*;
 use crate::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use ai::*;
 use bracket_lib::prelude::*;
 use components::*;
 use rand::Rng;
+use vaultkeeper_shared::{states::PauseState, State, Transition, WorldContext};
 
 #[derive(Default, Debug)]
 pub struct SimState {}
 
-impl VaultkeeperState for SimState {
+impl State for SimState {
   fn on_start(&mut self, _term: &mut BTerm, context: &mut WorldContext) {
     let mut rng = rand::thread_rng();
 
