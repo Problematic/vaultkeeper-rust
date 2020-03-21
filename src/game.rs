@@ -2,7 +2,9 @@ use bracket_lib::prelude::*;
 use components::*;
 use legion::prelude::*;
 use std::time::Duration;
-use vaultkeeper_shared::{MoveDirection, PlayerInput, State, Time, Transition, WorldContext};
+use vaultkeeper_shared::{
+  map::MapTile, MoveDirection, PlayerInput, Render, State, Time, Transition, WorldContext, WorldMap,
+};
 
 pub struct Game {
   pub schedule: Schedule,
@@ -84,6 +86,9 @@ impl GameState for Game {
     } else {
       panic!("No active state; make sure there's a fallback.");
     }
+
+    let map = self.context.resources.get::<WorldMap<MapTile>>().unwrap();
+    map.render(term);
 
     let query = <(Read<Position>, Read<Renderable>)>::query();
     for (pos, render) in query.iter(&self.context.world) {

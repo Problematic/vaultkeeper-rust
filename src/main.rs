@@ -50,7 +50,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     .with_dimensions(WINDOW_WIDTH, WINDOW_HEIGHT)
     .with_impassible_borders(true)
     .with_iterations(4)
-    .with_alpha(0.5)
+    .with_partition_jitter(0.1)
+    .with_room_size(0.75)
+    .with_min_room_size((3, 3))
+    .with_filled(true)
     .build();
 
   resources.insert(map);

@@ -1,4 +1,6 @@
 use super::Tile;
+use crate::Render;
+use bracket_lib::prelude::*;
 use components::Position;
 use std::ops;
 
@@ -37,6 +39,20 @@ where
     }
   }
 
+  pub fn new_from(width: i32, height: i32, source: T) -> Self
+  where
+    T: Clone,
+  {
+    assert!(width > 0);
+    assert!(height > 0);
+
+    Self {
+      width,
+      height,
+      tiles: vec![source; (width * height) as usize],
+    }
+  }
+
   pub fn height(&self) -> i32 {
     self.height
   }
@@ -64,6 +80,26 @@ where
       .map(|(dx, dy)| (x + dx, y + dy))
       .filter(|pos| self.contains(*pos) && !self[*pos].is_blocked())
       .collect()
+  }
+}
+
+impl<T> Render for WorldMap<T>
+where
+  T: Tile,
+{
+  fn render(&self, term: &mut BTerm) {
+    for idx in 0..self.tiles.len() {
+      let (x, y) = self.idx_to_xy(idx);
+      let tile = &self.tiles[idx];
+
+      term.set(
+        x,
+        y,
+        DARKGREY,
+        BLACK,
+        if tile.is_blocked() { b'#' } else { b'.' },
+      );
+    }
   }
 }
 
