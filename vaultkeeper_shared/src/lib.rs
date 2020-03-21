@@ -4,6 +4,7 @@ mod resources;
 mod state;
 pub mod states;
 mod transition;
+pub mod ui;
 pub mod utils;
 
 pub use map::MapGenerator;

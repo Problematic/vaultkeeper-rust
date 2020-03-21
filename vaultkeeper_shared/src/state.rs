@@ -1,4 +1,5 @@
 use super::Transition;
+use crate::ui::Input;
 use bracket_lib::prelude::BTerm;
 use legion::prelude::{Resources, World};
 
@@ -18,5 +19,14 @@ pub trait State {
 
   fn update(&mut self, _term: &mut BTerm, _context: &mut WorldContext) -> Transition {
     Transition::None
+  }
+
+  fn handle_input(
+    &mut self,
+    _term: &mut BTerm,
+    _context: &mut WorldContext,
+    _input: Input,
+  ) -> bool {
+    false
   }
 }

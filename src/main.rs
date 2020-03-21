@@ -11,6 +11,7 @@ use bracket_lib::prelude::*;
 use legion::prelude::*;
 use vaultkeeper_delve;
 use vaultkeeper_shared::map as vk_map;
+use vaultkeeper_shared::ui::Keybindings;
 use vaultkeeper_shared::*;
 
 pub const WINDOW_WIDTH: i32 = 80;
@@ -27,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let mut context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)?
     .with_title("Vaultkeeper")
     .with_tile_dimensions(16, 16)
-    .with_advanced_input(true)
+    // .with_advanced_input(true)
     .build()?;
 
   let universe = Universe::new();
@@ -44,7 +45,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let mut resources = Resources::default();
   resources.insert(Time::default());
-  resources.insert(PlayerInput::default());
 
   let map = vk_map::generators::BSPMapGenerator::<vk_map::MapTile>::new()
     .with_dimensions(WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -64,7 +64,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     _ => panic!("Unrecognized mode; expected one of `sim | delve`"),
   };
 
+  // TODO: load this from a command line argument / override file
+  let keybindings: Keybindings =
+    serde_json::from_str(include_str!("../resources/keybindings.json")).unwrap();
+
   let mut game = Game {
+    keybindings,
     context: WorldContext { world, resources },
     schedule: sb.build(),
     state_stack: vec![state],

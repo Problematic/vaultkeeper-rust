@@ -3,10 +3,11 @@ use components::*;
 use legion::prelude::*;
 use std::time::Duration;
 use vaultkeeper_shared::{
-  map::MapTile, MoveDirection, PlayerInput, Render, State, Time, Transition, WorldContext, WorldMap,
+  map::MapTile, ui::Keybindings, Render, State, Time, Transition, WorldContext, WorldMap,
 };
 
 pub struct Game {
+  pub keybindings: Keybindings,
   pub schedule: Schedule,
   pub context: WorldContext,
   pub state_stack: Vec<Box<dyn State>>,
@@ -33,28 +34,16 @@ impl GameState for Game {
 
     term.cls();
 
-    if let Some(VirtualKeyCode::Escape) = term.key {
-      term.quit();
-      return;
-    }
-
-    {
-      let mut player_input = self.context.resources.get_mut::<PlayerInput>().unwrap();
-
-      player_input.move_dir = match term.key {
-        Some(VirtualKeyCode::W) => Some(MoveDirection::Up),
-        Some(VirtualKeyCode::A) => Some(MoveDirection::Left),
-        Some(VirtualKeyCode::S) => Some(MoveDirection::Down),
-        Some(VirtualKeyCode::D) => Some(MoveDirection::Right),
-        _ => None,
-      };
-    }
-
     self
       .schedule
       .execute(&mut self.context.world, &mut self.context.resources);
 
     if let Some(mut active) = self.state_stack.pop() {
+      if let Some(input) = term.key.and_then(|key| self.keybindings.get(&key).copied()) {
+        // TODO: traverse the stack until the input is handled or we're done
+        let _handled = active.handle_input(term, &mut self.context, input);
+      }
+
       let transition = active.update(term, &mut self.context);
 
       match transition {

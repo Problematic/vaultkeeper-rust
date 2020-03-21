@@ -7,5 +7,6 @@ edition = "2018"
 bracket-lib = { git = "https://github.com/thebracket/bracket-lib", features = ["serde"] }
 legion = { git = "https://github.com/TomGillen/legion", features = ["default", "serialize"] }
 rand = "0.7.3"
+serde = { version = "1.0.104", features = ["derive"] }
 
 components = { path = "../crates/components" }

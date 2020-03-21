@@ -1,0 +1,6 @@
+{
+  "W": "MoveNorth",
+  "D": "MoveEast",
+  "S": "MoveSouth",
+  "A": "MoveWest"
+}

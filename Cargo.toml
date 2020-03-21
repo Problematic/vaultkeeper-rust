@@ -22,6 +22,9 @@ utils = { path = "./crates/utils" }
 vaultkeeper_shared = { path = "./vaultkeeper_shared" }
 vaultkeeper_delve = { path = "./vaultkeeper_delve" }
 
+[dependencies.winit]
+features = ["serde"]
+
 [workspace]
 members = [
   "crates/*",

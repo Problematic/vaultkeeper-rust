@@ -1769,6 +1769,7 @@ dependencies = [
  "utils",
  "vaultkeeper_delve",
  "vaultkeeper_shared",
+ "winit",
 ]
 
 [[package]]
@@ -1789,6 +1790,7 @@ dependencies = [
  "components",
  "legion",
  "rand",
+ "serde",
 ]
 
 [[package]]
@@ -2027,6 +2029,7 @@ dependencies = [
  "parking_lot 0.10.0",
  "percent-encoding",
  "raw-window-handle",
+ "serde",
  "smithay-client-toolkit",
  "wasm-bindgen",
  "wayland-client",

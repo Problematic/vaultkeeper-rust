@@ -1,9 +1,8 @@
 use crate::components::*;
-use crate::systems;
 use bracket_lib::prelude::*;
 use components::*;
 use legion::prelude::*;
-use vaultkeeper_shared::{State, Transition, WorldContext};
+use vaultkeeper_shared::{ui::Input as VKInput, State, Transition, WorldContext};
 
 #[derive(Default)]
 pub struct MainState {
@@ -12,11 +11,7 @@ pub struct MainState {
 
 impl State for MainState {
   fn on_start(&mut self, _term: &mut BTerm, context: &mut WorldContext) {
-    self.schedule = Some(
-      Schedule::builder()
-        .add_system(systems::build_move_player_system())
-        .build(),
-    );
+    self.schedule = Some(Schedule::builder().build());
 
     context.world.insert(
       (),
@@ -41,5 +36,16 @@ impl State for MainState {
     }
 
     Transition::None
+  }
+
+  fn handle_input(
+    &mut self,
+    _term: &mut BTerm,
+    _context: &mut WorldContext,
+    input: VKInput,
+  ) -> bool {
+    dbg!(&input);
+
+    false
   }
 }
