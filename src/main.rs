@@ -5,7 +5,6 @@ mod states;
 mod systems;
 
 use crate::game::*;
-use crate::states::*;
 use crate::systems::*;
 use bracket_lib::prelude::*;
 use legion::prelude::*;
@@ -20,10 +19,6 @@ pub const WINDOW_HEIGHT: i32 = 60;
 #[allow(clippy::too_many_lines)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   pretty_env_logger::init_timed();
-
-  // TODO: replace this with a main menu
-  let args: Vec<String> = std::env::args().collect();
-  let mode = if args.len() >= 2 { &args[1] } else { "delve" };
 
   let context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)?
     .with_title("Vaultkeeper")
@@ -58,21 +53,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   resources.insert(map);
 
-  let state: Box<dyn State<WorldContext>> = match mode {
-    "sim" => Box::new(SimState::default()),
-    "delve" => Box::new(vaultkeeper_delve::states::MainState::default()),
-    _ => panic!("Unrecognized mode; expected one of `sim | delve`"),
-  };
-
   // TODO: load this from a command line argument / override file
   let keybindings: Keybindings =
     serde_json::from_str(include_str!("../resources/keybindings.json")).unwrap();
+
+  let initial_state = vaultkeeper_delve::states::MainState::default();
 
   let mut game = Game {
     keybindings,
     context: WorldContext { world, resources },
     schedule: sb.build(),
-    state_stack: vec![state],
+    state_machine: StateMachine::new(initial_state),
   };
 
   game.init();
