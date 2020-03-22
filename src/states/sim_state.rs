@@ -3,13 +3,15 @@ use ai::*;
 use bracket_lib::prelude::*;
 use components::*;
 use rand::Rng;
-use vaultkeeper_shared::{states::PauseState, State, Transition, WorldContext};
+use vaultkeeper_shared::{
+  states::PauseState, ui::Input as VKInput, State, Transition, WorldContext,
+};
 
 #[derive(Default, Debug)]
 pub struct SimState {}
 
-impl State for SimState {
-  fn on_start(&mut self, _term: &mut BTerm, context: &mut WorldContext) {
+impl State<WorldContext> for SimState {
+  fn on_start(&mut self, context: &mut WorldContext) {
     let mut rng = rand::thread_rng();
 
     context.world.insert(
@@ -72,11 +74,14 @@ impl State for SimState {
     );
   }
 
-  fn update(&mut self, term: &mut BTerm, _context: &mut WorldContext) -> Transition {
-    if let Some(VirtualKeyCode::Space) = term.key {
-      return Transition::Push(Box::new(PauseState));
+  fn handle_input(
+    &mut self,
+    _context: &mut WorldContext,
+    input: VKInput,
+  ) -> Transition<WorldContext> {
+    match input {
+      VKInput::TogglePause => Transition::Push(Box::new(PauseState)),
+      _ => Transition::None,
     }
-
-    Transition::None
   }
 }

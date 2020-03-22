@@ -6,4 +6,6 @@ pub enum Input {
   MoveEast,
   MoveSouth,
   MoveWest,
+  Cancel,
+  TogglePause,
 }

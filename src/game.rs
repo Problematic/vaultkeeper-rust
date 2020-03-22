@@ -10,16 +10,16 @@ pub struct Game {
   pub keybindings: Keybindings,
   pub schedule: Schedule,
   pub context: WorldContext,
-  pub state_stack: Vec<Box<dyn State>>,
+  pub state_stack: Vec<Box<dyn State<WorldContext>>>,
 }
 
 impl Game {
-  pub fn init(&mut self, term: &mut BTerm) {
+  pub fn init(&mut self) {
     self
       .state_stack
       .last_mut()
       .unwrap()
-      .on_start(term, &mut self.context);
+      .on_start(&mut self.context);
   }
 }
 
@@ -41,27 +41,27 @@ impl GameState for Game {
     if let Some(mut active) = self.state_stack.pop() {
       if let Some(input) = term.key.and_then(|key| self.keybindings.get(&key).copied()) {
         // TODO: traverse the stack until the input is handled or we're done
-        let _handled = active.handle_input(term, &mut self.context, input);
+        let _handled = active.handle_input(&mut self.context, input);
       }
 
-      let transition = active.update(term, &mut self.context);
+      let transition = active.update(&mut self.context);
 
       match transition {
         Transition::Push(mut state) => {
-          active.on_pause(term, &mut self.context);
+          active.on_pause(&mut self.context);
           self.state_stack.push(active);
-          state.on_start(term, &mut self.context);
+          state.on_start(&mut self.context);
           self.state_stack.push(state);
         }
         Transition::Switch(mut state) => {
-          active.on_stop(term, &mut self.context);
-          state.on_start(term, &mut self.context);
+          active.on_stop(&mut self.context);
+          state.on_start(&mut self.context);
           self.state_stack.push(state);
         }
         Transition::Pop => {
-          active.on_stop(term, &mut self.context);
+          active.on_stop(&mut self.context);
           if let Some(next) = self.state_stack.last_mut() {
-            next.on_resume(term, &mut self.context);
+            next.on_resume(&mut self.context);
           }
         }
         Transition::None => {

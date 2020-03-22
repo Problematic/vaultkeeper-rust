@@ -2,5 +2,7 @@
   "W": "MoveNorth",
   "D": "MoveEast",
   "S": "MoveSouth",
-  "A": "MoveWest"
+  "A": "MoveWest",
+  "Escape": "Cancel",
+  "Space": "TogglePause"
 }

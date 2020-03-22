@@ -274,6 +274,8 @@ where
       }
     }
 
+    map.rooms.extend(rooms);
+
     map
   }
 }

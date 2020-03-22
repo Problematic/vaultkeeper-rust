@@ -22,6 +22,7 @@ where
   width: i32,
   height: i32,
   tiles: Vec<T>,
+  pub rooms: Vec<Rect>,
 }
 
 impl<T> WorldMap<T>
@@ -36,6 +37,7 @@ where
       width,
       height,
       tiles: vec![T::default(); (width * height) as usize],
+      rooms: Vec::with_capacity(20),
     }
   }
 
@@ -50,6 +52,7 @@ where
       width,
       height,
       tiles: vec![source; (width * height) as usize],
+      rooms: Vec::with_capacity(20),
     }
   }
 

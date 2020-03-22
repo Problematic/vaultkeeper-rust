@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let args: Vec<String> = std::env::args().collect();
   let mode = if args.len() >= 2 { &args[1] } else { "delve" };
 
-  let mut context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)?
+  let context = BTermBuilder::simple(WINDOW_WIDTH, WINDOW_HEIGHT)?
     .with_title("Vaultkeeper")
     .with_tile_dimensions(16, 16)
     // .with_advanced_input(true)
@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   resources.insert(map);
 
-  let state: Box<dyn State> = match mode {
+  let state: Box<dyn State<WorldContext>> = match mode {
     "sim" => Box::new(SimState::default()),
     "delve" => Box::new(vaultkeeper_delve::states::MainState::default()),
     _ => panic!("Unrecognized mode; expected one of `sim | delve`"),
@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     state_stack: vec![state],
   };
 
-  game.init(&mut context);
+  game.init();
 
   main_loop(context, game)
 }

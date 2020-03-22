@@ -1,10 +1,10 @@
 use super::State;
 
 #[allow(dead_code)]
-pub enum Transition {
+pub enum Transition<T> {
   None,
-  Push(Box<dyn State>),
-  Switch(Box<dyn State>),
+  Push(Box<dyn State<T>>),
+  Switch(Box<dyn State<T>>),
   Pop,
   Quit,
 }

@@ -1,15 +1,14 @@
-use crate::{State, Transition, WorldContext};
-use bracket_lib::prelude::*;
+use crate::ui::Input as VKInput;
+use crate::{State, Transition};
 
 #[derive(Debug)]
 pub struct PauseState;
 
-impl State for PauseState {
-  fn update(&mut self, term: &mut BTerm, _context: &mut WorldContext) -> Transition {
-    if let Some(VirtualKeyCode::Space) = term.key {
-      Transition::Pop
-    } else {
-      Transition::None
+impl<TContext> State<TContext> for PauseState {
+  fn handle_input(&mut self, _context: &mut TContext, input: VKInput) -> Transition<TContext> {
+    match input {
+      VKInput::TogglePause => Transition::Pop,
+      _ => Transition::None,
     }
   }
 }
