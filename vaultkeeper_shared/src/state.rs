@@ -1,10 +1,20 @@
 use crate::ui::Input;
 use legion::prelude::{Resources, World};
 
-pub struct StateContext<TData> {
-  pub world: World,
-  pub resources: Resources,
-  pub data: TData,
+pub struct StateContext<'a, TData> {
+  pub world: &'a mut World,
+  pub resources: &'a mut Resources,
+  pub data: &'a mut TData,
+}
+
+impl<'a, TData> StateContext<'a, TData> {
+  pub fn new(world: &'a mut World, resources: &'a mut Resources, data: &'a mut TData) -> Self {
+    Self {
+      world,
+      resources,
+      data,
+    }
+  }
 }
 
 #[allow(dead_code)]
@@ -26,23 +36,19 @@ impl<TData> Transition<TData> {
 }
 
 pub trait State<TData> {
-  fn on_start(&mut self, _context: &mut StateContext<TData>) {}
+  fn on_start(&mut self, _context: StateContext<TData>) {}
 
-  fn on_stop(&mut self, _context: &mut StateContext<TData>) {}
+  fn on_stop(&mut self, _context: StateContext<TData>) {}
 
-  fn on_pause(&mut self, _context: &mut StateContext<TData>) {}
+  fn on_pause(&mut self, _context: StateContext<TData>) {}
 
-  fn on_resume(&mut self, _context: &mut StateContext<TData>) {}
+  fn on_resume(&mut self, _context: StateContext<TData>) {}
 
-  fn update(&mut self, _context: &mut StateContext<TData>) -> Transition<TData> {
+  fn update(&mut self, _context: StateContext<TData>) -> Transition<TData> {
     Transition::None
   }
 
-  fn handle_input(
-    &mut self,
-    _context: &mut StateContext<TData>,
-    _input: Input,
-  ) -> Transition<TData> {
+  fn handle_input(&mut self, _context: StateContext<TData>, _input: Input) -> Transition<TData> {
     Transition::None
   }
 }
@@ -60,59 +66,156 @@ impl<'a, TData> StateMachine<'a, TData> {
     }
   }
 
-  pub fn start(&mut self, context: &mut StateContext<TData>) {
+  pub fn start(&mut self, context: StateContext<TData>) {
     self.running = true;
     self.state_stack.last_mut().unwrap().on_start(context);
   }
 
-  pub fn handle_input(&mut self, context: &mut StateContext<TData>, input: Input) {
+  pub fn handle_input(&mut self, context: StateContext<TData>, input: Input) {
     assert!(self.running);
 
+    let StateContext {
+      world,
+      resources,
+      data,
+    } = context;
+
     let transition = match self.state_stack.last_mut() {
-      Some(state) => state.handle_input(context, input),
+      Some(state) => state.handle_input(
+        StateContext {
+          world,
+          resources,
+          data,
+        },
+        input,
+      ),
       None => Transition::None,
     };
 
-    self.transition(context, transition);
+    self.transition(
+      StateContext {
+        world,
+        resources,
+        data,
+      },
+      transition,
+    );
   }
 
-  pub fn update(&mut self, context: &mut StateContext<TData>) {
+  pub fn update(&mut self, context: StateContext<TData>) {
     assert!(self.running);
 
-    if let Some(active) = self.state_stack.last_mut() {
-      let transition = active.update(context);
+    let StateContext {
+      world,
+      resources,
+      data,
+    } = context;
 
-      self.transition(context, transition);
+    if let Some(active) = self.state_stack.last_mut() {
+      let transition = active.update(StateContext {
+        world,
+        resources,
+        data,
+      });
+
+      self.transition(
+        StateContext {
+          world,
+          resources,
+          data,
+        },
+        transition,
+      );
     }
   }
 
-  pub fn transition(&mut self, context: &mut StateContext<TData>, transition: Transition<TData>) {
+  fn push(&mut self, state: Box<dyn State<TData>>, context: StateContext<TData>) {
     assert!(self.running);
 
-    if let Some(mut active) = self.state_stack.pop() {
-      match transition {
-        Transition::Push(mut state) => {
-          active.on_pause(context);
-          self.state_stack.push(active);
-          state.on_start(context);
-          self.state_stack.push(state);
-        }
-        Transition::Switch(mut state) => {
-          active.on_stop(context);
-          state.on_start(context);
-          self.state_stack.push(state);
-        }
-        Transition::Pop => {
-          active.on_stop(context);
-          if let Some(next) = self.state_stack.last_mut() {
-            next.on_resume(context);
-          }
-        }
-        Transition::None => {
-          self.state_stack.push(active);
-        }
-        Transition::Quit => self.running = false,
-      }
+    let StateContext {
+      world,
+      resources,
+      data,
+    } = context;
+
+    if let Some(state) = self.state_stack.last_mut() {
+      state.on_pause(StateContext {
+        world,
+        resources,
+        data,
+      });
+    }
+
+    self.state_stack.push(state);
+    self.state_stack.last_mut().unwrap().on_start(StateContext {
+      world,
+      resources,
+      data,
+    });
+  }
+
+  fn switch(&mut self, state: Box<dyn State<TData>>, context: StateContext<TData>) {
+    assert!(self.running);
+
+    let StateContext {
+      world,
+      resources,
+      data,
+    } = context;
+
+    if let Some(mut state) = self.state_stack.pop() {
+      state.on_stop(StateContext {
+        world,
+        resources,
+        data,
+      });
+    }
+
+    self.state_stack.push(state);
+    self.state_stack.last_mut().unwrap().on_start(StateContext {
+      world,
+      resources,
+      data,
+    });
+  }
+
+  fn pop(&mut self, context: StateContext<TData>) {
+    assert!(self.running);
+
+    let StateContext {
+      world,
+      resources,
+      data,
+    } = context;
+
+    if let Some(mut state) = self.state_stack.pop() {
+      state.on_stop(StateContext {
+        world,
+        resources,
+        data,
+      });
+    }
+
+    if let Some(state) = self.state_stack.last_mut() {
+      state.on_resume(StateContext {
+        world,
+        resources,
+        data,
+      });
+    } else {
+      self.running = false;
+    }
+  }
+
+  pub fn transition(&mut self, context: StateContext<TData>, transition: Transition<TData>) {
+    assert!(self.running);
+
+    match transition {
+      Transition::Push(state) => self.push(state, context),
+      Transition::Switch(state) => self.switch(state, context),
+      Transition::Pop => self.pop(context),
+      Transition::None => (),
+      Transition::Quit => self.running = false,
     }
   }
 }

@@ -13,7 +13,7 @@ pub struct MainState {
 }
 
 impl State<StateData> for MainState {
-  fn on_start(&mut self, context: &mut StateContext<StateData>) {
+  fn on_start(&mut self, context: StateContext<StateData>) {
     let mut rng = rand::thread_rng();
 
     self.schedule = Some(Schedule::builder().build());
@@ -38,9 +38,9 @@ impl State<StateData> for MainState {
     );
   }
 
-  fn update(&mut self, context: &mut StateContext<StateData>) -> Transition<StateData> {
+  fn update(&mut self, context: StateContext<StateData>) -> Transition<StateData> {
     if let Some(schedule) = self.schedule.as_mut() {
-      schedule.execute(&mut context.world, &mut context.resources);
+      schedule.execute(context.world, context.resources);
     }
 
     Transition::None
@@ -48,11 +48,11 @@ impl State<StateData> for MainState {
 
   fn handle_input(
     &mut self,
-    _context: &mut StateContext<StateData>,
+    _context: StateContext<StateData>,
     input: VKInput,
   ) -> Transition<StateData> {
-    dbg!(&input);
-
-    Transition::None
+    match input {
+      _ => Transition::None,
+    }
   }
 }

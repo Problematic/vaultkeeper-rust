@@ -60,11 +60,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let mut game = Game {
     keybindings,
-    context: StateContext {
-      world,
-      resources,
-      data: vaultkeeper_delve::StateData { action: None },
-    },
+    world,
+    resources,
+    data: vaultkeeper_delve::StateData { action: None },
     schedule: sb.build(),
     state_machine: StateMachine::new(initial_state),
   };
