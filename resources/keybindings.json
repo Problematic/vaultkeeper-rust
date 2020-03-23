@@ -1,4 +1,9 @@
 {
+  "Numpad8": "MoveNorth",
+  "Numpad6": "MoveEast",
+  "Numpad2": "MoveSouth",
+  "Numpad4": "MoveWest",
+  "Numpad5": "Wait",
   "W": "MoveNorth",
   "D": "MoveEast",
   "S": "MoveSouth",

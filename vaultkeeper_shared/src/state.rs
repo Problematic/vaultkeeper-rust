@@ -1,22 +1,23 @@
 use crate::ui::Input;
 use legion::prelude::{Resources, World};
 
-pub struct WorldContext {
+pub struct StateContext<TData> {
   pub world: World,
   pub resources: Resources,
+  pub data: TData,
 }
 
 #[allow(dead_code)]
-pub enum Transition<T> {
+pub enum Transition<TData> {
   None,
-  Push(Box<dyn State<T>>),
-  Switch(Box<dyn State<T>>),
+  Push(Box<dyn State<TData>>),
+  Switch(Box<dyn State<TData>>),
   Pop,
   Quit,
 }
 
-impl<T> Transition<T> {
-  pub fn or(self, alt: Transition<T>) -> Transition<T> {
+impl<TData> Transition<TData> {
+  pub fn or(self, alt: Transition<TData>) -> Transition<TData> {
     match self {
       Transition::None => alt,
       _ => self,
@@ -24,43 +25,47 @@ impl<T> Transition<T> {
   }
 }
 
-pub trait State<TContext> {
-  fn on_start(&mut self, _context: &mut TContext) {}
+pub trait State<TData> {
+  fn on_start(&mut self, _context: &mut StateContext<TData>) {}
 
-  fn on_stop(&mut self, _context: &mut TContext) {}
+  fn on_stop(&mut self, _context: &mut StateContext<TData>) {}
 
-  fn on_pause(&mut self, _context: &mut TContext) {}
+  fn on_pause(&mut self, _context: &mut StateContext<TData>) {}
 
-  fn on_resume(&mut self, _context: &mut TContext) {}
+  fn on_resume(&mut self, _context: &mut StateContext<TData>) {}
 
-  fn update(&mut self, _context: &mut TContext) -> Transition<TContext> {
+  fn update(&mut self, _context: &mut StateContext<TData>) -> Transition<TData> {
     Transition::None
   }
 
-  fn handle_input(&mut self, _context: &mut TContext, _input: Input) -> Transition<TContext> {
+  fn handle_input(
+    &mut self,
+    _context: &mut StateContext<TData>,
+    _input: Input,
+  ) -> Transition<TData> {
     Transition::None
   }
 }
 
-pub struct StateMachine<'a, TContext> {
+pub struct StateMachine<'a, TData> {
   running: bool,
-  state_stack: Vec<Box<dyn State<TContext> + 'a>>,
+  state_stack: Vec<Box<dyn State<TData> + 'a>>,
 }
 
-impl<'a, TContext> StateMachine<'a, TContext> {
-  pub fn new<S: State<TContext> + 'a>(initial_state: S) -> Self {
+impl<'a, TData> StateMachine<'a, TData> {
+  pub fn new<S: State<TData> + 'a>(initial_state: S) -> Self {
     Self {
       running: false,
       state_stack: vec![Box::new(initial_state)],
     }
   }
 
-  pub fn start(&mut self, context: &mut TContext) {
+  pub fn start(&mut self, context: &mut StateContext<TData>) {
     self.running = true;
     self.state_stack.last_mut().unwrap().on_start(context);
   }
 
-  pub fn handle_input(&mut self, context: &mut TContext, input: Input) {
+  pub fn handle_input(&mut self, context: &mut StateContext<TData>, input: Input) {
     assert!(self.running);
 
     let transition = match self.state_stack.last_mut() {
@@ -71,7 +76,7 @@ impl<'a, TContext> StateMachine<'a, TContext> {
     self.transition(context, transition);
   }
 
-  pub fn update(&mut self, context: &mut TContext) {
+  pub fn update(&mut self, context: &mut StateContext<TData>) {
     assert!(self.running);
 
     if let Some(active) = self.state_stack.last_mut() {
@@ -81,7 +86,7 @@ impl<'a, TContext> StateMachine<'a, TContext> {
     }
   }
 
-  pub fn transition(&mut self, context: &mut TContext, transition: Transition<TContext>) {
+  pub fn transition(&mut self, context: &mut StateContext<TData>, transition: Transition<TData>) {
     assert!(self.running);
 
     if let Some(mut active) = self.state_stack.pop() {

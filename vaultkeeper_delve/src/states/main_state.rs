@@ -1,10 +1,10 @@
-use crate::components::*;
+use crate::{components::*, StateData};
 use bracket_lib::prelude::*;
 use components::*;
 use legion::prelude::*;
 use rand::seq::SliceRandom;
 use vaultkeeper_shared::{
-  map::MapTile, ui::Input as VKInput, State, Transition, WorldContext, WorldMap,
+  map::MapTile, ui::Input as VKInput, State, StateContext, Transition, WorldMap,
 };
 
 #[derive(Default)]
@@ -12,8 +12,8 @@ pub struct MainState {
   schedule: Option<Schedule>,
 }
 
-impl State<WorldContext> for MainState {
-  fn on_start(&mut self, context: &mut WorldContext) {
+impl State<StateData> for MainState {
+  fn on_start(&mut self, context: &mut StateContext<StateData>) {
     let mut rng = rand::thread_rng();
 
     self.schedule = Some(Schedule::builder().build());
@@ -38,7 +38,7 @@ impl State<WorldContext> for MainState {
     );
   }
 
-  fn update(&mut self, context: &mut WorldContext) -> Transition<WorldContext> {
+  fn update(&mut self, context: &mut StateContext<StateData>) -> Transition<StateData> {
     if let Some(schedule) = self.schedule.as_mut() {
       schedule.execute(&mut context.world, &mut context.resources);
     }
@@ -48,9 +48,9 @@ impl State<WorldContext> for MainState {
 
   fn handle_input(
     &mut self,
-    _context: &mut WorldContext,
+    _context: &mut StateContext<StateData>,
     input: VKInput,
-  ) -> Transition<WorldContext> {
+  ) -> Transition<StateData> {
     dbg!(&input);
 
     Transition::None

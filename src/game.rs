@@ -3,23 +3,23 @@ use components::*;
 use legion::prelude::*;
 use std::time::Duration;
 use vaultkeeper_shared::{
-  map::MapTile, ui::Keybindings, Render, StateMachine, Time, WorldContext, WorldMap,
+  map::MapTile, ui::Keybindings, Render, StateContext, StateMachine, Time, WorldMap,
 };
 
-pub struct Game {
+pub struct Game<TData> {
   pub keybindings: Keybindings,
   pub schedule: Schedule,
-  pub context: WorldContext,
-  pub state_machine: StateMachine<'static, WorldContext>,
+  pub context: StateContext<TData>,
+  pub state_machine: StateMachine<'static, TData>,
 }
 
-impl Game {
+impl<TData> Game<TData> {
   pub fn init(&mut self) {
     self.state_machine.start(&mut self.context);
   }
 }
 
-impl GameState for Game {
+impl<TData: 'static> GameState for Game<TData> {
   fn tick(&mut self, term: &mut BTerm) {
     self
       .context

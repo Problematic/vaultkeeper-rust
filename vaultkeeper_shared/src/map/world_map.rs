@@ -98,7 +98,7 @@ where
       term.set(
         x,
         y,
-        DARKGREY,
+        if tile.is_blocked() { GREY45 } else { GREY10 },
         BLACK,
         if tile.is_blocked() { b'#' } else { b'.' },
       );

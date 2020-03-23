@@ -1,7 +1,6 @@
 #![warn(clippy::pedantic)]
 
 mod game;
-mod states;
 mod systems;
 
 use crate::game::*;
@@ -61,7 +60,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let mut game = Game {
     keybindings,
-    context: WorldContext { world, resources },
+    context: StateContext {
+      world,
+      resources,
+      data: vaultkeeper_delve::StateData { action: None },
+    },
     schedule: sb.build(),
     state_machine: StateMachine::new(initial_state),
   };

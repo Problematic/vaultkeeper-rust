@@ -1,11 +1,15 @@
 use crate::ui::Input as VKInput;
-use crate::{State, Transition};
+use crate::{State, StateContext, Transition};
 
 #[derive(Debug)]
 pub struct PauseState;
 
-impl<TContext> State<TContext> for PauseState {
-  fn handle_input(&mut self, _context: &mut TContext, input: VKInput) -> Transition<TContext> {
+impl<TData> State<TData> for PauseState {
+  fn handle_input(
+    &mut self,
+    _context: &mut StateContext<TData>,
+    input: VKInput,
+  ) -> Transition<TData> {
     match input {
       VKInput::TogglePause => Transition::Pop,
       _ => Transition::None,

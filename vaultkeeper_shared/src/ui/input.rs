@@ -8,4 +8,5 @@ pub enum Input {
   MoveWest,
   Cancel,
   TogglePause,
+  Wait,
 }
