@@ -54,9 +54,7 @@ impl WorldMap {
 
   /// Renders only revealed tiles (entities and visible tiles are in a
   /// separate rendering pass)
-  pub fn render(&self) {
-    let mut batch = DrawBatch::new();
-
+  pub fn render(&self, batch: &mut DrawBatch) {
     for idx in 0..self.tiles.len() {
       let tile = &self.tiles[idx];
 
@@ -65,7 +63,8 @@ impl WorldMap {
       }
 
       let (x, y) = self.idx_to_xy(idx);
-      let Appearance { glyph, fg, bg } = tile.appearance();
+      let Appearance { glyph, colors } = tile.appearance();
+      let ColorPair { fg, bg } = colors;
 
       batch.set(
         Position::new(x, y),
@@ -73,8 +72,6 @@ impl WorldMap {
         glyph,
       );
     }
-
-    batch.submit(0).unwrap();
   }
 }
 
