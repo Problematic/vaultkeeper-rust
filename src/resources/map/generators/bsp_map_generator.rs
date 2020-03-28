@@ -1,7 +1,8 @@
 use super::super::{MapGenerator, Tile, TileType, WorldMap};
 use super::{BSPTree, Partition};
-use crate::components::Position;
+use crate::components::Direction;
 use bracket_lib::prelude::*;
+use pathfinding::prelude::{absdiff, astar};
 use rand::{seq::SliceRandom, Rng, RngCore};
 
 pub struct Region {
@@ -118,6 +119,8 @@ pub struct BSPMapGenerator {
   iterations: u8,
   min_room_size: (i32, i32),
   impassible_borders: bool,
+  carve_cost: i32,
+  open_cost: i32,
 }
 
 impl BSPMapGenerator {
@@ -131,6 +134,8 @@ impl BSPMapGenerator {
       filled: false,
       iterations: 4,
       impassible_borders: true,
+      carve_cost: 100,
+      open_cost: 10,
     }
   }
 
@@ -179,29 +184,42 @@ impl BSPMapGenerator {
 
   fn carve_corridor(&self, map: &mut WorldMap, from: &Rect, to: &Rect) {
     let start = from.center();
-    let end = to.center();
+    let goal = to.center();
 
-    let horizontal = Position::new(start.x + (end.x - start.x) / 2, start.y);
+    let result = astar(
+      &start,
+      |pos| {
+        let pos = *pos;
+        [
+          Direction::North,
+          Direction::East,
+          Direction::South,
+          Direction::West,
+        ]
+        .iter()
+        .filter_map(|dir| {
+          let dest = pos + dir.as_delta_pos();
 
-    let vert = Position::new(horizontal.x, end.y);
+          if !map.in_bounds(dest) {
+            None
+          } else {
+            let cost = if map[dest].is_walkable() {
+              self.open_cost
+            } else {
+              self.carve_cost
+            };
 
-    {
-      let line = Bresenham::new(start, horizontal);
-      for point in line {
-        map[point].kind = TileType::Open;
-      }
-    }
+            Some((dest, cost))
+          }
+        })
+        .collect::<Vec<_>>()
+      },
+      |pos| absdiff(pos.x, goal.x) + absdiff(pos.y, goal.y),
+      |pos| to.point_in_rect(*pos),
+    );
 
-    {
-      let line = Bresenham::new(horizontal, vert);
-      for point in line {
-        map[point].kind = TileType::Open;
-      }
-    }
-
-    {
-      let line = Bresenham::new(vert, end);
-      for point in line {
+    if let Some((path, cost)) = result {
+      for point in path {
         map[point].kind = TileType::Open;
       }
     }
@@ -239,7 +257,7 @@ impl MapGenerator for BSPMapGenerator {
     });
 
     for room in &rooms {
-      let corridor_count = rng.gen_range(1, 3);
+      let corridor_count = rng.gen_range(2, 4);
       for dest in rooms.choose_multiple(rng, corridor_count) {
         self.carve_corridor(&mut map, room, dest);
       }
