@@ -1,4 +1,4 @@
-use crate::components::{Input, *};
+use crate::components::{tags::Player, Input, *};
 use crate::resources::{
   map::{generators::BSPMapGenerator, MapGenerator, WorldMap},
   GameTime, Keymap,
@@ -12,6 +12,7 @@ use rand::{
   rngs::StdRng,
   seq::{IteratorRandom, SliceRandom},
 };
+use std::collections::HashSet;
 
 pub struct Game {
   pub resources: Resources,
@@ -28,6 +29,8 @@ impl Game {
       .flush()
       .add_system(build_attack_system())
       .add_system(build_movement_system())
+      .flush()
+      .add_system(build_visibility_system())
       .build();
     self.schedule = Some(schedule);
 
@@ -58,6 +61,7 @@ impl Game {
         Speed(60),
         Health::new(100),
         None::<Input>,
+        Viewshed::new(8),
       )],
     );
 
@@ -120,11 +124,27 @@ impl Game {
   fn render(&self, term: &mut BTerm) {
     term.cls();
 
-    self.resources.get::<WorldMap>().unwrap().render(term);
+    let map = self.resources.get::<WorldMap>().unwrap();
+
+    map.render(term);
+
+    let player_viewsheds = <Read<Viewshed>>::query().filter(tag::<Player>());
+    let mut visible_tiles = HashSet::<Position>::new();
+    for viewshed in player_viewsheds.iter(&self.world) {
+      visible_tiles.extend(viewshed.visible_tiles.iter());
+      viewshed.visible_tiles.iter().for_each(|pos| {
+        let Appearance { glyph, fg, bg } = map[*pos].appearance();
+
+        term.set(pos.x, pos.y, fg, bg, glyph);
+      });
+    }
 
     let query = <(Read<Position>, Read<Appearance>)>::query();
-
     for (position, appearance) in query.iter(&self.world) {
+      if !visible_tiles.contains(&position) {
+        continue;
+      }
+
       let Position { x, y } = *position;
       let Appearance { glyph, fg, bg } = *appearance;
 

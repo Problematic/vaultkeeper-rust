@@ -25,6 +25,7 @@ pub struct Tile {
   /// a tile can only ever have a maximum of one "occupant", which is
   /// defined as an actor-type entity (player, monster, etc)
   pub occupant: Option<Entity>,
+  pub is_revealed: bool,
 }
 
 impl Tile {
@@ -36,6 +37,10 @@ impl Tile {
   pub fn is_walkable(&self) -> bool {
     self.kind == TileType::Open && self.occupant.is_none()
   }
+
+  pub fn is_opaque(&self) -> bool {
+    self.kind == TileType::Solid
+  }
 }
 
 impl Default for Tile {
@@ -43,6 +48,7 @@ impl Default for Tile {
     Self {
       kind: TileType::Open,
       occupant: None,
+      is_revealed: false,
     }
   }
 }

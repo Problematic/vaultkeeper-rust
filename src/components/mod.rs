@@ -8,6 +8,7 @@ mod input;
 mod position;
 mod speed;
 pub mod tags;
+mod viewshed;
 
 pub use appearance::Appearance;
 pub use direction::Direction;
@@ -16,3 +17,4 @@ pub use health::Health;
 pub use input::Input;
 pub use position::Position;
 pub use speed::Speed;
+pub use viewshed::Viewshed;

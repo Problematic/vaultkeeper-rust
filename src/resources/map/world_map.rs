@@ -52,15 +52,37 @@ impl WorldMap {
     (idx % self.width, idx / self.width)
   }
 
+  /// Renders only revealed tiles (entities and visible tiles are in a
+  /// separate rendering pass)
   pub fn render(&self, term: &mut BTerm) {
     for idx in 0..self.tiles.len() {
-      let (x, y) = self.idx_to_xy(idx);
       let tile = &self.tiles[idx];
 
+      if !tile.is_revealed {
+        continue;
+      }
+
+      let (x, y) = self.idx_to_xy(idx);
       let Appearance { glyph, fg, bg } = tile.appearance();
 
-      term.set(x, y, fg, bg, glyph);
+      term.set(x, y, fg.desaturate().lerp(bg, 0.65), bg, glyph);
     }
+  }
+}
+
+impl Algorithm2D for WorldMap {
+  fn dimensions(&self) -> Point {
+    Point::new(self.width, self.height)
+  }
+
+  fn in_bounds(&self, pos: Point) -> bool {
+    pos.x >= 0 && pos.x < self.width && pos.y >= 0 && pos.y < self.height
+  }
+}
+
+impl BaseMap for WorldMap {
+  fn is_opaque(&self, idx: usize) -> bool {
+    self.tiles[idx].is_opaque()
   }
 }
 
