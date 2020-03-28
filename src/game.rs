@@ -31,6 +31,7 @@ impl Game {
       .add_system(build_movement_system())
       .flush()
       .add_system(build_visibility_system())
+      .add_system(build_lifetime_system())
       .build();
     self.schedule = Some(schedule);
 
@@ -126,7 +127,9 @@ impl Game {
 
     let map = self.resources.get::<WorldMap>().unwrap();
 
-    map.render(term);
+    map.render();
+
+    render_draw_buffer(term).unwrap();
 
     let player_viewsheds = <Read<Viewshed>>::query().filter(tag::<Player>());
     let mut visible_tiles = HashSet::<Position>::new();

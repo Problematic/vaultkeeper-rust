@@ -1,6 +1,10 @@
-use crate::components::{actions::AttackAction, Health, Position};
+use crate::components::{
+  actions::AttackAction, tags::Effect, Appearance, Health, Lifetime, Position,
+};
 use crate::resources::WorldMap;
+use bracket_lib::prelude::*;
 use legion::prelude::*;
+use std::time::Duration;
 
 pub fn build_attack_system() -> Box<dyn Schedulable> {
   SystemBuilder::new("attack")
@@ -24,9 +28,25 @@ pub fn build_attack_system() -> Box<dyn Schedulable> {
             {
               cmd.delete(target);
               map[dest].occupant = None;
+
+              cmd
+                .start_entity()
+                .with_tag((Effect,))
+                .with_component(dest)
+                .with_component(Appearance::new('x', GREY, BLACK))
+                .with_component(Lifetime::GameTime(Duration::from_millis(300)))
+                .build();
             }
           } else {
             log::info!("Whack!");
+
+            cmd
+              .start_entity()
+              .with_tag((Effect,))
+              .with_component(dest)
+              .with_component(Appearance::new('☼', RED, BLACK))
+              .with_component(Lifetime::GameTime(Duration::from_millis(250)))
+              .build();
           }
         } else {
           log::warn!("Whiff! (Target wasn't present for some reason?)");
