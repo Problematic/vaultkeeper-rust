@@ -1,4 +1,7 @@
-use crate::components::{tags::Player, Appearance, Position, Viewshed};
+use crate::components::{
+  tags::{Effect, Player},
+  Appearance, Position, Viewshed,
+};
 use crate::resources::WorldMap;
 use bracket_lib::prelude::*;
 use legion::prelude::*;
@@ -10,7 +13,8 @@ pub fn build_render_system() -> Box<dyn Schedulable> {
   SystemBuilder::new("render")
     .read_resource::<WorldMap>()
     .with_query(<Read<Viewshed>>::query().filter(tag::<Player>()))
-    .with_query(<(Read<Position>, Read<Appearance>)>::query())
+    .with_query(<(Read<Position>, Read<Appearance>)>::query().filter(!tag::<Effect>()))
+    .with_query(<(Read<Position>, Read<Appearance>)>::query().filter(tag::<Effect>()))
     .build(move |_, world, map, queries| {
       visible_tiles.clear();
 
@@ -27,9 +31,18 @@ pub fn build_render_system() -> Box<dyn Schedulable> {
           batch.set(*pos, colors, glyph);
         });
       }
-      // batch.submit(50).unwrap();
 
       for (position, appearance) in queries.1.iter(&world) {
+        if !visible_tiles.contains(&position) {
+          continue;
+        }
+
+        let Appearance { glyph, colors } = *appearance;
+
+        batch.set(*position, colors, glyph);
+      }
+
+      for (position, appearance) in queries.2.iter(&world) {
         if !visible_tiles.contains(&position) {
           continue;
         }
