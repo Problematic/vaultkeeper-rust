@@ -3,6 +3,7 @@ name = "vaultkeeper"
 version = "0.1.0"
 authors = ["Derek Stobbe <djstobbe@gmail.com>"]
 edition = "2018"
+publish = false
 
 [dependencies]
 bracket-lib = { git = "https://github.com/thebracket/bracket-lib", features = ["serde"] }
