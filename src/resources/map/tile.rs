@@ -35,7 +35,11 @@ impl Tile {
   }
 
   pub fn is_walkable(&self) -> bool {
-    self.kind == TileType::Open && self.occupant.is_none()
+    self.kind == TileType::Open
+  }
+
+  pub fn is_occupied(&self) -> bool {
+    self.occupant.is_some()
   }
 
   pub fn is_opaque(&self) -> bool {

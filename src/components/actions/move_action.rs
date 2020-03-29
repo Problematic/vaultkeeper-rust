@@ -1,12 +1,12 @@
-use crate::components::Direction;
+use crate::components::Target;
 
 #[derive(Debug)]
 pub struct MoveAction {
-  pub direction: Direction,
+  pub target: Target,
 }
 
 impl MoveAction {
-  pub fn new(direction: Direction) -> Self {
-    Self { direction }
+  pub fn new(target: Target) -> Self {
+    Self { target }
   }
 }

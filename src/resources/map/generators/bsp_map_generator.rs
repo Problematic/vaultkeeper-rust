@@ -218,7 +218,7 @@ impl BSPMapGenerator {
       |pos| to.point_in_rect(*pos),
     );
 
-    if let Some((path, cost)) = result {
+    if let Some((path, _cost)) = result {
       for point in path {
         map[point].kind = TileType::Open;
       }

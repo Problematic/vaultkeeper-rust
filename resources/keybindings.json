@@ -16,6 +16,7 @@
   "Right": { "Move": "East" },
   "Down": { "Move": "South" },
   "Left": { "Move": "West" },
+  "Period": "Wait",
   "Escape": "Cancel",
   "Space": "TogglePause"
 }

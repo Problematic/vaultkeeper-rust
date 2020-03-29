@@ -1,17 +1,22 @@
+pub mod ai;
 mod attack_system;
+mod awareness_system;
 mod energy_system;
 mod input_intent_system;
 mod lifetime_system;
 mod movement_system;
+mod pathfinder_system;
 mod render_system;
 mod visibility_system;
-mod wander_ai_system;
+mod wait_system;
 
 pub use attack_system::build_attack_system;
+pub use awareness_system::build_awareness_system;
 pub use energy_system::build_energy_system;
 pub use input_intent_system::build_input_intent_system;
 pub use lifetime_system::build_lifetime_system;
 pub use movement_system::build_movement_system;
+pub use pathfinder_system::build_pathfinder_system;
 pub use render_system::build_render_system;
 pub use visibility_system::build_visibility_system;
-pub use wander_ai_system::build_wander_ai_system;
+pub use wait_system::build_wait_system;

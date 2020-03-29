@@ -3,6 +3,7 @@ use crate::resources::{
   map::{generators::BSPMapGenerator, MapGenerator, WorldMap},
   GameTime, Keymap,
 };
+use crate::systems::ai;
 use crate::systems::*;
 use crate::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use bracket_lib::prelude::*;
@@ -23,14 +24,19 @@ impl Game {
   pub fn init(&mut self) {
     let schedule = Schedule::builder()
       .add_system(build_input_intent_system())
+      .add_system(ai::build_intent_system())
       .add_system(build_energy_system())
-      .add_system(build_wander_ai_system())
+      .add_system(build_pathfinder_system())
       .flush()
       .add_system(build_attack_system())
       .add_system(build_movement_system())
+      .add_system(build_wait_system())
       .flush()
       .add_system(build_visibility_system())
       .add_system(build_lifetime_system())
+      .add_system(build_awareness_system())
+      .flush()
+      .add_system(ai::build_action_system())
       .flush()
       .add_system(build_render_system())
       .build();
@@ -58,21 +64,26 @@ impl Game {
       (tags::Mobile, tags::Player),
       vec![(
         start_pos,
+        Name::new("Player"),
         Appearance::new('@', WHITE, BLACK),
         Energy::new(Energy::ACTION_COST),
         Speed(60),
         Health::new(100),
         None::<Input>,
         Viewshed::new(8),
+        Navigation::default(),
+        // TODO: does the player need these?
+        Awareness::default(),
+        Memory::default(),
       )],
     );
 
     let monsters = [
-      ('a', LIGHTBLUE, Speed(60), Health::new(10)),
-      ('a', CORNSILK, Speed(80), Health::new(15)),
-      ('c', DEEPSKYBLUE, Speed(20), Health::new(20)),
-      ('d', VIOLETRED, Speed(40), Health::new(10)),
-      ('t', SILVER, Speed(100), Health::new(5)),
+      ('a', "Test 1", LIGHTBLUE, Speed(60), Health::new(10)),
+      ('a', "Test 2", CORNSILK, Speed(80), Health::new(15)),
+      ('c', "Test 3", DEEPSKYBLUE, Speed(20), Health::new(20)),
+      ('d', "Test 4", VIOLETRED, Speed(40), Health::new(10)),
+      ('t', "Test 5", SILVER, Speed(100), Health::new(5)),
     ];
 
     let count_dist = Uniform::from(0..=3);
@@ -102,14 +113,19 @@ impl Game {
                 pos.y -= 1;
               }
 
-              let (glyph, fg, speed, health) = monsters.choose(rng).cloned().unwrap();
+              let (glyph, name, fg, speed, health) = monsters.choose(rng).cloned().unwrap();
 
               (
                 pos,
+                Name::new(name),
                 Appearance::new(glyph, fg, BLACK),
                 Energy::default(),
                 speed,
                 health,
+                Viewshed::new(8),
+                Awareness::default(),
+                Memory::default(),
+                Navigation::default(),
               )
             })
             .collect::<Vec<_>>()
@@ -117,9 +133,11 @@ impl Game {
         .collect::<Vec<_>>(),
     );
 
-    let query = Read::<Position>::query();
-    for (entity, pos) in query.iter_entities(&self.world) {
+    let query = <(Read<Position>, Write<Viewshed>)>::query();
+    for (entity, (pos, mut viewshed)) in query.iter_entities_mut(&mut self.world) {
       map[*pos].occupant = Some(entity);
+
+      viewshed.update(map, *pos);
     }
   }
 }

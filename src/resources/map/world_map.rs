@@ -73,6 +73,23 @@ impl WorldMap {
       );
     }
   }
+
+  pub fn get_neighbors(&self, pos: Position) -> Vec<Position> {
+    let mut neighbors = Vec::with_capacity(8);
+
+    let Position { x, y } = pos;
+
+    for dx in -1..=1 {
+      for dy in -1..=1 {
+        let p = Position::new(x + dx, y + dy);
+        if self[p].is_walkable() {
+          neighbors.push(p);
+        }
+      }
+    }
+
+    neighbors
+  }
 }
 
 impl Algorithm2D for WorldMap {

@@ -14,12 +14,12 @@
    5. [ ] Victory / defeat screen/splash
 4. Exploration
    1. [x] Player movement
-   2. [ ] Map is revealed as player moves through vault
-   3. [ ] Monsters move toward hero when visible
+   2. [x] Map is revealed as player moves through vault
+   3. [x] Monsters move toward hero when visible
 5. Combat
    1. [ ] Monsters attack player when adjacent
-   2. [ ] Player bump-to-attack
-   3. [ ] Attacks reduce actor HP
-   4. [ ] Actors are defeated (removed from world) when they reach 0 HP
+   2. [x] Player bump-to-attack
+   3. [x] Attacks reduce actor HP
+   4. [x] Actors are defeated (removed from world) when they reach 0 HP
 6. Objective
    1. [ ] Vault is complete when player finds and interacts with vault mainframe
