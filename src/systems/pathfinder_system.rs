@@ -1,4 +1,4 @@
-use crate::components::{Navigation, Position, Target};
+use crate::components::{Intent, Memory, Name, Navigation, Position, Target};
 use crate::resources::WorldMap;
 use legion::prelude::*;
 use pathfinding::prelude::{absdiff, astar};
@@ -6,17 +6,26 @@ use pathfinding::prelude::{absdiff, astar};
 pub fn build_pathfinder_system() -> Box<dyn Schedulable> {
   SystemBuilder::new("pathfinder")
     .read_resource::<WorldMap>()
-    .read_component::<Position>()
-    .with_query(<(Read<Position>, Write<Navigation>)>::query())
-    .build(|_, mut world, map, query| {
-      for (pos, mut nav) in query.iter_mut(&mut world) {
+    .with_query(<(
+      Read<Name>,
+      Read<Position>,
+      Read<Memory>,
+      Write<Navigation>,
+    )>::query())
+    .build(|cmd, mut world, map, query| {
+      for (entity, (name, pos, memory, mut nav)) in query.iter_entities_mut(&mut world) {
         let goal = match &*nav {
           Navigation {
-            goal: Some(Target::Entity(entity)),
+            goal: Some(Target::Entity(target)),
             path,
           } if !path.is_empty() => {
-            if let Some(target_pos) = world.get_component::<Position>(*entity).as_deref() {
-              if path.back() != Some(target_pos) {
+            if let Some(target_pos) = memory.encounters.get(target) {
+              if target_pos == &*pos {
+                log::warn!("{} lost your scent.", *name);
+                nav.goal = None;
+                cmd.remove_component::<Intent>(entity);
+                None
+              } else if path.back() != Some(target_pos) {
                 // TODO: cooldown on how often we can re-path due to our target moving?
                 Some(*target_pos)
               } else {
